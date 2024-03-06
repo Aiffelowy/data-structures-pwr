@@ -15,6 +15,7 @@ public:
   ~ArrayList();
 
   void push(T item);
+  void insert(T item, int place);
   T pop();
   void expand();
   T* operator[](int i);

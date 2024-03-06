@@ -17,6 +17,8 @@ public:
   LinkedList();
   ~LinkedList();
   void push(T item);
+  void insert(T item, int place);
+  void remove(int place);
   T pop();
   T* operator[](int i);
 };
