@@ -1,4 +1,4 @@
-CC        = clang++
+CC        = g++
 CXXFLAGS  = -Os -pipe -march=native -Wall -std=c++20
 LDFLAGS   =
 RM        = rm -f
