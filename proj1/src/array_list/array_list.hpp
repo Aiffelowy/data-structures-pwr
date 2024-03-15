@@ -11,12 +11,7 @@ private:
   int length;
   int capacity;
 
-  void resize_buffer() {
-      T* new_buffer = new T[size];
-      std::copy(new_buffer[0], new_buffer[length], this->buffer[0]);
-      delete[] buffer;
-      buffer = new_buffer;
-  }
+  void resize_buffer();
 
 public:
   //default constructor
@@ -65,6 +60,14 @@ public:
 };
 
 template<typename T>
+void ArrayList<T>::resize_buffer() {
+  T* new_buffer = new T[this->capacity];
+  std::copy(&this->buffer[0], &this->buffer[length], &new_buffer[0]);
+  delete[] this->buffer;
+  this->buffer = new_buffer;
+}
+
+template<typename T>
 ArrayList<T>::ArrayList(void) : buffer(nullptr), length(0), capacity(0) {}
 
 template<typename T>
@@ -109,67 +112,56 @@ T& ArrayList<T>::operator[](int i) {
 
 template<typename T>
 void ArrayList<T>::push(T item) {
-    length++;
-    if (length == size) {
-        extend();
-    }
-    buffer[length] = item;
+    if (this->length+1 > this->capacity) { this->extend(); }
+    this->length++;
+    buffer[length-1] = item;
 }
 
 template<typename T>
 void ArrayList<T>::insert(T item, int position) {
-    if (position >= length) {
-        return;
-    }
+    if (position >= this->length) { return; }
     
-    length++;
-   
-    if (length == size) {
-        extend();
-    }
-    for (int i = length; i >= position; i--) {
-        buffer[i + 1] = buffer[i];
-    }
-    buffer[position] = item;
+    if (this->length+1 > this->capacity) { this->extend(); }
+    this->length++;
+    
+    for (int i = this->length; i >= position; i--) { this->buffer[i + 1] = this->buffer[i]; }
+    this->buffer[position] = item;
 }
 
 template<typename T>
 void ArrayList<T>::remove(int position) {
-    if (position >= length) {
-        return;
-    }
-
-    length--;
+    if (position >= this->length) { return; }
     
-    for (int i = position; i < length; i++) {
-        buffer[i] = buffer[i + 1];
+    this->length--;
+    for (int i = position; i < this->length; i++) {
+        this->buffer[i] = this->buffer[i + 1];
     }
 }
 
 template<typename T>
 T ArrayList<T>::pop(void) {
-    length--;
-    return buffer[length + 1];
+    this->length--;
+    return this->buffer[length];
 }
 
 template<typename T>
 void ArrayList<T>::extend() {
-    size *= 2;
+    capacity *= 2;
     resize_buffer();
 }
 
 template<typename T>
 void ArrayList<T>::extend(int by) {
-    size += by;
+    capacity += by;
     resize_buffer();
 
 }
 
 template<typename T>
 void ArrayList<T>::resize(int new_size) {
-    size = new_size;
-    if (length > size) {
-        length = size;
+    capacity = new_size;
+    if (length > capacity) {
+        length = capacity;
     }
     resize_buffer();
 }

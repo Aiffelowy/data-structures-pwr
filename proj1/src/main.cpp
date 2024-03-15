@@ -14,10 +14,8 @@ void print_array_copy(ArrayList<T> arr) {
 
 
 int main(int argc, char *argv[]) {
-  ArrayList<int> arr1 = {1 ,2 ,3 ,4, 5, 6};
-  
-  arr1.extend();
-
+  ArrayList<int> arr1 = {1, 2, 3, 4, 5};
+  arr1.resize(2);
   print_array_copy(arr1);
 
   return 0;
