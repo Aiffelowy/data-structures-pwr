@@ -9,6 +9,7 @@ void print_array_copy(ArrayList<T> arr) {
   }
   std::cout << std::endl;
 }
+//sus
 
 
 int main(int argc, char *argv[]) {
