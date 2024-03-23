@@ -1,8 +1,8 @@
 #ifndef MY_ARRAY_LIST
 #define MY_ARRAY_LIST
 
-
 #include <algorithm>
+
 
 template <typename T>
 struct ArrayList {
@@ -29,7 +29,9 @@ public:
   ArrayList(Ts && ... values);
   //array accessor
   T& operator[](int);
- 
+  //comparison operator
+  bool operator==(const ArrayList&) const;
+
   //iterator begin
   T* begin(void);
   //iterator end
@@ -71,7 +73,7 @@ template<typename T>
 ArrayList<T>::ArrayList(void) : buffer(nullptr), length(0), capacity(0) {}
 
 template<typename T>
-ArrayList<T>::ArrayList(int size) : buffer(new T[size]), length(0), capacity(size) {}
+ArrayList<T>::ArrayList(int size) : buffer(new T[size]), length(size), capacity(size) {}
 
 template<typename T>
 template<typename... Ts> requires((... && std::is_convertible_v<Ts, T>))
@@ -110,6 +112,16 @@ T& ArrayList<T>::operator[](int i) {
   return this->buffer[i];
 }
 
+
+template<typename T>
+bool ArrayList<T>::operator==(const ArrayList<T>& other) const {
+  if(this->length != other.length) { return false; }
+  for(int i = 0; i < this->length; i++) {
+    if(this->buffer[i] != other.buffer[i]) { return false; }
+  }
+  return true;
+}
+
 template<typename T>
 void ArrayList<T>::push(T item) {
     if (this->length+1 > this->capacity) { this->extend(); }
@@ -136,32 +148,35 @@ void ArrayList<T>::remove(int position) {
     for (int i = position; i < this->length; i++) {
         this->buffer[i] = this->buffer[i + 1];
     }
+    if(this->length <= (this->capacity/2)) { this->capacity /= 2; resize_buffer(); }
 }
 
 template<typename T>
 T ArrayList<T>::pop(void) {
-    this->length--;
-    return this->buffer[length];
+  T temp = this->buffer[length-1];
+  this->length--;
+  if(this->length <= (this->capacity/2)) { this->capacity /= 2; resize_buffer(); }
+  return temp;
 }
 
 template<typename T>
 void ArrayList<T>::extend() {
-    capacity *= 2;
+    this->capacity *= 2;
     resize_buffer();
 }
 
 template<typename T>
 void ArrayList<T>::extend(int by) {
-    capacity += by;
+    this->capacity += by;
     resize_buffer();
 
 }
 
 template<typename T>
 void ArrayList<T>::resize(int new_size) {
-    capacity = new_size;
-    if (length > capacity) {
-        length = capacity;
+    this->capacity = new_size;
+    if (this->length > this->capacity) {
+        this->length = this->capacity;
     }
     resize_buffer();
 }
