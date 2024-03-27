@@ -2,6 +2,7 @@
 #define MY_ARRAY_LIST
 
 #include <algorithm>
+#include <functional>
 
 
 template <typename T>
@@ -40,6 +41,9 @@ public:
   T* cbegin(void) const;
   //const iterator end
   T* cend(void) const;
+
+  //find
+  T find(std::function<bool(T&)>);
 
   //push the new item at the end of the array
   void push(T);
@@ -198,5 +202,13 @@ int ArrayList<T>::size() const { return capacity; }
 
 template<typename T>
 int ArrayList<T>::len() const { return length; }
+
+template<typename T>
+T ArrayList<T>::find(std::function<bool(T&)> lambda) {
+  for(T item : this) {
+    if(lambda(item)) { return item; }
+  }
+  return T();
+}
 
 #endif
