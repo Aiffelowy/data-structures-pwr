@@ -3,7 +3,11 @@
 #include "misc.hpp"
 
 void clear_screen(void) {
-  std::system("clear");
+  #if defined(_WIN32) || defined(__WIN32__) || defined(_MSC_VER)
+    std::system("cls");
+  #else
+    std::system("clear");
+  #endif
 }
 
 void print(const char* fmt) {
