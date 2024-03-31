@@ -1,26 +1,10 @@
-#ifndef MY_LINKED_LIST
-#define MY_LINKED_LIST
+#ifndef LINKED_LIST_H
+#define LINKED_LIST_H
+
+#include "node.hpp"
 
 #include <functional>
 #include <iostream>
-
-template <typename T>
-struct Node {
-  T content;
-  Node* next;
-  
-  Node(T);
-  Node* get_next_node(int);
-};
-
-template<typename T>
-Node<T>::Node(T item) : content(item), next(nullptr) {}
-
-template<typename T>
-Node<T>* Node<T>::get_next_node(int position) {
-  if(position == 0) { return this; }
-  return next->get_next_node(position-1);
-}
 
 template <typename T>
 struct LinkedList {
@@ -49,7 +33,7 @@ public:
   void for_each(std::function<void(T&)>);
 
   //find function
-  T find(std::function<bool(T&)>);
+  T find(std::function<bool(const T&)>) const;
   
   //push new item at the end of the list
   void push(T);
@@ -59,6 +43,8 @@ public:
   void remove(int);
   //pop the last item on the list
   T pop(void);
+  //return the length of the list
+  int len();
 
 
   void print_list();
@@ -76,11 +62,12 @@ LinkedList<T>::LinkedList(const LinkedList& other) {
   head = new Node(other_node->content);
   
   Node<T>* this_node = head;
-  for(int i = 1; i < length; i++) {
+  while(other_node->next != nullptr) {
     other_node = other_node->next;
     this_node->next = new Node(other_node->content);
     this_node = this_node->next;
   }
+  this_node->next = nullptr;
 }
 
 template<typename T>
@@ -110,6 +97,7 @@ LinkedList<T>& LinkedList<T>::operator=(const LinkedList& other) {
     this_node->next = new Node(other_node->content);
     this_node = this_node->next;
   }
+  this_node->next = nullptr;
   return *this;
 }
 
@@ -133,7 +121,7 @@ LinkedList<T>::~LinkedList() {
 
 template<typename T>
 Node<T>* LinkedList<T>::get_node(int position) {
-  if(position > length) { return nullptr; }
+  if(position >= length) { return nullptr; }
   return head->get_next_node(position);
 }
 
@@ -194,7 +182,7 @@ void LinkedList<T>::for_each(std::function<void(T&)> lambda) {
 }
 
 template<typename T>
-T LinkedList<T>::find(std::function<bool(T&)> lambda) {
+T LinkedList<T>::find(std::function<bool(const T&)> lambda) const {
   Node<T>* current = head;
   while(current != nullptr) {
     if(lambda(current->content)) { return current->content; }
@@ -213,5 +201,8 @@ void LinkedList<T>::print_list() {
   }
   std::cout << "\n";
 }
+
+template<typename T>
+int LinkedList<T>::len() { return this->length; }
 
 #endif
