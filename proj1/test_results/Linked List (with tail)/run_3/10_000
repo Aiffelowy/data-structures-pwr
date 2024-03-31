@@ -1,0 +1,8 @@
+Linked List (with tail)    size: 10000
+add_first: 1396 nano
+add_last: 978 nano
+add_random: 4330 nano
+remove_first: 977 nano
+remove_last: 14248 nano
+remove_random: 2934 nano
+find: 17739 nano
