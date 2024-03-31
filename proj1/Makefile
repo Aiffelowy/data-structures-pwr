@@ -3,14 +3,14 @@ CXXFLAGS  = -Os -pipe -march=native -Wall -std=c++20
 LDFLAGS   =
 RM        = rm -f
 
-SRC  = $(wildcard src/*.cpp)
+SRC  = $(wildcard src/*.cpp src/*/*.cpp)
 OBJ  = $(SRC:.cpp=.o)
 EXEC = proj1
 
 default: $(EXEC)
 
 clean:
-	$(RM) proj1 src/*.o
+	$(RM) proj1 src/*.o src/*/*.o
 
 .cpp.o:
 	$(CC) -c $(CXXFLAGS) -o $@ $<
