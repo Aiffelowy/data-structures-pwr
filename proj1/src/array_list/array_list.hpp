@@ -1,5 +1,5 @@
-#ifndef MY_ARRAY_LIST
-#define MY_ARRAY_LIST
+#ifndef ARRAY_LIST_H
+#define ARRAY_LIST_H
 
 #include <algorithm>
 #include <functional>
@@ -35,15 +35,17 @@ public:
 
   //iterator begin
   T* begin(void);
+  T* begin(void) const;
   //iterator end
   T* end(void);
+  T* end(void) const;
   //const iterator begin
   T* cbegin(void) const;
   //const iterator end
   T* cend(void) const;
 
   //find
-  T find(std::function<bool(T&)>);
+  T find(std::function<bool(const T&)>) const;
 
   //push the new item at the end of the array
   void push(T);
@@ -68,7 +70,7 @@ public:
 template<typename T>
 void ArrayList<T>::resize_buffer() {
   T* new_buffer = new T[this->capacity];
-  std::copy(&this->buffer[0], &this->buffer[length], &new_buffer[0]);
+  std::copy(this->cbegin(), this->cend(), &new_buffer[0]);
   delete[] this->buffer;
   this->buffer = new_buffer;
 }
@@ -93,7 +95,7 @@ ArrayList<T>::ArrayList(const ArrayList& other) {
   if(this->capacity == 0) { this->buffer = nullptr; return; }
 
   this->buffer = new T[this->capacity];
-  std::copy(other.cbegin(), other.cend(), this->begin());
+  std::copy(other.cbegin(), other.cend(), this->cbegin());
 }
 
 template<typename T>
@@ -101,7 +103,7 @@ ArrayList<T>& ArrayList<T>::operator=(const ArrayList& other) {
   if(this == &other) { return *this; }
 
   this->length = other.length;
-  this->size = other.capacity;
+  this->capacity = other.capacity;
   if(this->buffer != nullptr) {
     delete [] this->buffer;
   }
@@ -189,7 +191,13 @@ template<typename T>
 T* ArrayList<T>::begin(void) { return &buffer[0]; }
 
 template<typename T>
+T* ArrayList<T>::begin(void) const { return &buffer[0]; }
+
+template<typename T>
 T* ArrayList<T>::end(void) { return &buffer[length]; }
+
+template<typename T>
+T* ArrayList<T>::end(void) const { return &buffer[length]; }
 
 template<typename T>
 T* ArrayList<T>::cbegin(void) const { return &buffer[0]; }
@@ -204,8 +212,8 @@ template<typename T>
 int ArrayList<T>::len() const { return length; }
 
 template<typename T>
-T ArrayList<T>::find(std::function<bool(T&)> lambda) {
-  for(T item : this) {
+T ArrayList<T>::find(std::function<bool(const T&)> lambda) const {
+  for(const T& item : *this) {
     if(lambda(item)) { return item; }
   }
   return T();
