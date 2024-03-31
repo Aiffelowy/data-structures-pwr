@@ -1,22 +1,23 @@
 #ifndef Double_Linked_List
 #define Double_Linked_List
 
+#include <functional>
 #include <iostream>
 
 //DLL = Double Linked List
 
-//Node class
+//NodeD class
 template<class T>
-class Node {
+class NodeD {
 public:
     T number;
-    Node<T>* previous;
-    Node<T>* next;
+    NodeD<T>* previous;
+    NodeD<T>* next;
 
     //constructor
-    Node(void) : previous(nullptr), next(nullptr) {}
+    NodeD(void) : previous(nullptr), next(nullptr) {}
     //destructor
-    ~Node() {}
+    ~NodeD() {};
 
 };
 
@@ -27,28 +28,32 @@ private:
     int size;
 
 public:
-    Node<T>* head;
-    Node<T>* tail;
+    NodeD<T>* head;
+    NodeD<T>* tail;
 
 
     //constructor
-    DoubleLinkedList(void) : head(nullptr), tail(nullptr), size(0) {}
+    DoubleLinkedList(void) : size(0), head(nullptr), tail(nullptr) {}
+    //copy constructor
+    DoubleLinkedList(const DoubleLinkedList&);
+    //copy assignment
+    DoubleLinkedList& operator=(const DoubleLinkedList&);
     //destructor
-    ~DoubleLinkedList() {}
+    ~DoubleLinkedList();
 
     //add to the front
     void push_head(const T& value);
     //add to the end
-    void push_tail(const T& value);
+    void push(const T& value);
     //add to any place
-    void push(int index, const T& value);
+    void insert(int index, const T& value);
 
     //remove from the front
     void pop_head();
     //remove from the end
-    void pop_tail();
+    void pop();
     //remove from any place
-    void pop(int index);
+    void remove(int index);
 
     //show the list
     void show() const;
@@ -58,7 +63,74 @@ public:
     int counter() const;
     //search for the number
     int search(int index);
+    //return length of the list
+    int len() const;
+
+    T find(std::function<bool(const T&)>) const;
 };
+
+template<class T>
+DoubleLinkedList<T>::~DoubleLinkedList() {
+  NodeD<T>* current = head;
+  NodeD<T>* next = nullptr;
+  while(current != nullptr) {
+    next = current->next;
+    delete current;
+    current = next;
+  }
+}
+
+template<class T>
+DoubleLinkedList<T>::DoubleLinkedList(const DoubleLinkedList& other) {
+  size = other.size;
+  if(this->size == 0) { return; }
+
+  NodeD<T>* other_node = other.head;
+  head = new NodeD<T>();
+  head->number = other_node->number;
+  
+  NodeD<T>* this_node = head;
+  while(other_node->next != nullptr) {
+    other_node = other_node->next;
+    this_node->next = new NodeD<T>();
+    this_node->next->number = other_node->number;
+    this_node->next->previous = this_node;
+    this_node = this_node->next;
+  }
+  this_node->next = nullptr;
+  tail = this_node;
+}
+
+template<class T>
+DoubleLinkedList<T>& DoubleLinkedList<T>::operator=(const DoubleLinkedList& other) {
+  if(this == other) { return *this; }
+  if(this->head != nullptr) {
+    NodeD<T>* current = head;
+    NodeD<T>* next = nullptr;
+    while(current != nullptr) {
+      next = current->next;
+      delete current;
+      current = next;
+    }
+  }
+  this->size = other.size;
+
+  NodeD<T>* other_node = other.head;
+  head = new NodeD<T>();
+  head->number = other_node->number;
+  
+  NodeD<T>* this_node = head;
+  while(other_node != nullptr) {
+    other_node = other_node->next;
+    this_node->next = new NodeD<T>();
+    this_node->next->number = other_node->number;
+    this_node->next->previous = this_node;
+    this_node = this_node->next;
+  }
+  this_node->next = nullptr;
+  tail = this_node;
+  return *this;
+}
 
 template<class T>
 void DoubleLinkedList<T>::pop_head() {
@@ -66,7 +138,7 @@ void DoubleLinkedList<T>::pop_head() {
         return;
     }
 
-    Node<T>* node = head; //set pointer as first element in DLL
+    NodeD<T>* node = head; //set pointer as first element in DLL
     head = head->next; //set head as one after first head in DLL
 
     delete node;
@@ -78,7 +150,7 @@ void DoubleLinkedList<T>::pop_head() {
 }
 
 template<class T>
-void DoubleLinkedList<T>::pop_tail() {
+void DoubleLinkedList<T>::pop() {
     //checking size
     if (size == 0) {
         return;
@@ -88,15 +160,15 @@ void DoubleLinkedList<T>::pop_tail() {
         return;
     }
 
-    Node<T>* NewNode = tail; //set pointer as last element in DLL
+    NodeD<T>* NewNodeD = tail; //set pointer as last element in DLL
     tail = tail->previous; //set tail as one before last tail in DLL
     tail->next = nullptr;
-    delete NewNode;
+    delete NewNodeD;
     size--;
 }
 
 template<class T>
-void DoubleLinkedList<T>::pop(int index) {
+void DoubleLinkedList<T>::remove(int index) {
     // Check if the list is empty
     if (size == 0) {
         return;
@@ -108,7 +180,7 @@ void DoubleLinkedList<T>::pop(int index) {
         return;
     }
 
-    Node<T>* current;
+    NodeD<T>* current;
 
     if (index < size / 2) { // If the index is closer to the beginning of the DLL
         current = head;
@@ -128,7 +200,7 @@ void DoubleLinkedList<T>::pop(int index) {
         pop_head();
     }
     else if (index == size - 1) { // If the index is at the end of the DLL
-        pop_tail();
+        pop();
     }
     else {
         current->previous->next = current->next;
@@ -142,44 +214,44 @@ void DoubleLinkedList<T>::pop(int index) {
 template<class T>
 void DoubleLinkedList<T>::push_head(const T& value) {
 
-    Node<T>* newNode = new Node<T>();
-    newNode->number = value;
+    NodeD<T>* newNodeD = new NodeD<T>();
+    newNodeD->number = value;
     //If DLL is empty
     if (!head) {
-        head = newNode;
-        tail = newNode;
+        head = newNodeD;
+        tail = newNodeD;
     }
     // Setting pointer
     else {
-        newNode->next = head;
-        head->previous = newNode;
-        head = newNode;
+        newNodeD->next = head;
+        head->previous = newNodeD;
+        head = newNodeD;
     }
     size++;
 }
 
 template<class T>
-void DoubleLinkedList<T>::push_tail(const T& value) {
+void DoubleLinkedList<T>::push(const T& value) {
 
-    Node<T>* newNode = new Node<T>();
-    newNode->number = value;
+    NodeD<T>* newNodeD = new NodeD<T>();
+    newNodeD->number = value;
     //If DLL is empty
     if (!tail) {
-        head = newNode;
-        tail = newNode;
+        head = newNodeD;
+        tail = newNodeD;
     }
     // Setting pointer
     else {
-        newNode->previous = tail;
-        tail->next = newNode;
-        tail = newNode;
+        newNodeD->previous = tail;
+        tail->next = newNodeD;
+        tail = newNodeD;
     }
     size++;
 }
 
 
 template<class T>
-void DoubleLinkedList<T>::push(int index, const T& value) {
+void DoubleLinkedList<T>::insert(int index, const T& value) {
     if (index > size || index < 0) {
         std::cout << "Index out of range \n";
         return;
@@ -191,12 +263,12 @@ void DoubleLinkedList<T>::push(int index, const T& value) {
     }
 
     if (index == size) {
-        push_tail(value);
+        push(value);
         return;
     }
 
    // Checking where is better to start from, head or tail
-    Node<T>* current;
+    NodeD<T>* current;
     if (index < size / 2) { // If index is closer to the beginning of the DLL
         current = head;
         for (int i = 0; i < index; ++i) {
@@ -210,14 +282,14 @@ void DoubleLinkedList<T>::push(int index, const T& value) {
         }
     }
 
-    Node<T>* newNode = new Node<T>();
-    newNode->number = value;
+    NodeD<T>* newNodeD = new NodeD<T>();
+    newNodeD->number = value;
 
     // Put new node to the DLL
-    newNode->previous = current->previous;
-    newNode->next = current;
-    current->previous->next = newNode;
-    current->previous = newNode;
+    newNodeD->previous = current->previous;
+    newNodeD->next = current;
+    current->previous->next = newNodeD;
+    current->previous = newNodeD;
 
     size++;
 }
@@ -225,7 +297,7 @@ void DoubleLinkedList<T>::push(int index, const T& value) {
 //showing the DLL
 template<class T>
 void DoubleLinkedList<T>::show() const {
-    Node<T>* current = head;
+    NodeD<T>* current = head;
     while (current) {
         std::cout << current->number << " ";
         current = current->next;
@@ -236,7 +308,7 @@ void DoubleLinkedList<T>::show() const {
 //showing the DLL backward
 template<class T>
 void DoubleLinkedList<T>::show_backward() const {
-    Node<T>* current = tail;
+    NodeD<T>* current = tail;
     while (current) {
         std::cout << current->number << " ";
         current = current->previous;
@@ -257,7 +329,7 @@ int DoubleLinkedList<T>::search(int index) {
         return 0;
     }
 
-    Node<T>* current;
+    NodeD<T>* current;
 
     // Choose starting point
     if (index < size / 2) { // If the index is closer to the beginning of the DLL
@@ -277,5 +349,18 @@ int DoubleLinkedList<T>::search(int index) {
     return current->number;
 }
 
+template<typename T>
+int DoubleLinkedList<T>::len() const { return size; }
+
+
+template<typename T>
+T DoubleLinkedList<T>::find(std::function<bool(const T&)> lambda) const {
+  NodeD<T>* current = head;
+  while(current != nullptr) {
+    if(lambda(current->number)) { return current->number; }
+    current = current->next;
+  }
+  return T();
+}
 
 #endif
