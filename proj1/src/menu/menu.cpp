@@ -30,7 +30,7 @@ int SubMenu::cursor_limit() const {
 }
 
 Menu::Menu() {}
-Menu::~Menu() {}
+Menu::~Menu() { delete current_submenu; }
 
 void Menu::change_menu(MENUTYPE type) {
   menu_history.push(current_submenu->type());
