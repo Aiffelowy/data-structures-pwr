@@ -1,8 +1,8 @@
 Linked List    size: 40000
-add_first: 1885 nano
-add_last: 154000 nano
-add_random: 18927 nano
-remove_first: 2444 nano
-remove_last: 145409 nano
-remove_random: 18089 nano
-find: 6775 nano
+add_first: 1886 nano
+add_last: 130254 nano
+add_random: 136330 nano
+remove_first: 1885 nano
+remove_last: 123759 nano
+remove_random: 119219 nano
+find: 4610 nano

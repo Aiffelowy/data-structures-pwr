@@ -1,8 +1,8 @@
 Linked List (with tail)    size: 16000
-add_first: 1397 nano
-add_last: 1466 nano
-add_random: 20394 nano
-remove_first: 1467 nano
-remove_last: 23816 nano
-remove_random: 13758 nano
-find: 9498 nano
+add_first: 2375 nano
+add_last: 1397 nano
+add_random: 14876 nano
+remove_first: 1886 nano
+remove_last: 35269 nano
+remove_random: 18229 nano
+find: 10895 nano

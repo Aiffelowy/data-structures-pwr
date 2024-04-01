@@ -1,8 +1,8 @@
 Doubly Linked List    size: 40000
-add_first: 1467 nano
-add_last: 908 nano
-add_random: 1397 nano
-remove_first: 1956 nano
+add_first: 978 nano
+add_last: 977 nano
+add_random: 978 nano
+remove_first: 1885 nano
 remove_last: 1397 nano
-remove_random: 35549 nano
-find: 16063 nano
+remove_random: 37784 nano
+find: 5657 nano

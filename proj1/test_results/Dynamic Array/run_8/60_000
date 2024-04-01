@@ -1,8 +1,8 @@
 Dynamic Array    size: 60000
-add_first: 230895 nano
-add_last: 23397 nano
-add_random: 24724 nano
-remove_first: 30521 nano
-remove_last: 978 nano
-remove_random: 4261 nano
-find: 5238 nano
+add_first: 23956 nano
+add_last: 978 nano
+add_random: 5168 nano
+remove_first: 29683 nano
+remove_last: 1396 nano
+remove_random: 6146 nano
+find: 16343 nano
