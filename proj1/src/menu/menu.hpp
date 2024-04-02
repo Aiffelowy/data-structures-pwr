@@ -147,7 +147,7 @@ private:
   TestResults test;
   
   void print_menu(std::string, std::string, ArrayList<std::string>);
-  void change_menu(MENUTYPE);
+  void change_menu(MENUTYPE, bool);
   void action();
   void back();
 

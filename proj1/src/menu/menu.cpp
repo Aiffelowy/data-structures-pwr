@@ -32,8 +32,8 @@ int SubMenu::cursor_limit() const {
 Menu::Menu() {}
 Menu::~Menu() { delete current_submenu; }
 
-void Menu::change_menu(MENUTYPE type) {
-  menu_history.push(current_submenu->type());
+void Menu::change_menu(MENUTYPE type, bool amongus) {
+  if(amongus) { menu_history.push(current_submenu->type()); }
   cursor_position = 0;
   delete current_submenu;
   switch(type) {
@@ -51,27 +51,27 @@ void Menu::action() {
   ACTION action = current_submenu->get_action(cursor_position);
   switch (action) {
     case CHANGE_MENU_TITLE: {
-      change_menu(TITLE);
+      change_menu(TITLE, true);
       break;
     }
     case CHANGE_MENU_RNG_SCREEN: {
-      change_menu(RNG_SCREEN);
+      change_menu(RNG_SCREEN, true);
       break;
     }
     case CHANGE_MENU_RNG_SELECT: {
-      change_menu(RNG_SELECT_NUMBER);
+      change_menu(RNG_SELECT_NUMBER, true);
       break;
     }
     case CHANGE_MENU_DS_SELECT: {
-      change_menu(DS_SELECT);
+      change_menu(DS_SELECT, true);
       break;
     }
     case CHANGE_MENU_AUTO_TEST: {
-      change_menu(AUTO_TEST);
+      change_menu(AUTO_TEST, true);
       break;
     }
     case CHANGE_MENU_DS_TEST: {
-      change_menu(DS_TEST);
+      change_menu(DS_TEST, true);
       TestResults result(time_unit, ds_to_test);
       switch(ds_to_test) {
         case LINKED_LIST: { result.run_tests(rng.into_linkedlist()); break; }
@@ -85,8 +85,7 @@ void Menu::action() {
       break;
     }
     case CHANGE_MENU_TIME_UNIT: {
-      menu_history.push(current_submenu->type());
-      change_menu(TIME_UNIT_SELECT);
+      change_menu(TIME_UNIT_SELECT, true);
       break;
     }
     case LOAD_RNG: {
@@ -152,7 +151,7 @@ void Menu::action() {
 void Menu::back() {
   if(menu_history.len() == 0) { return; }
   MENUTYPE prev_menu = menu_history.pop();
-  change_menu(prev_menu);
+  change_menu(prev_menu, false);
 }
 
 void Menu::test_ds() {}
