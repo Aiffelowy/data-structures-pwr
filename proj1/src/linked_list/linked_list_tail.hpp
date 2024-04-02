@@ -6,6 +6,8 @@
 #include <functional>
 #include <iostream>
 
+//the comments here will be almost the same from the normal linked list, execpt we set the tail where needed
+
 template <typename T>
 struct LinkedListT {
 private:

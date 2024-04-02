@@ -17,6 +17,7 @@ void SubMenu::print(int cursor_position, RNG& rng, DS_TO_TEST type, TIME_UNIT ti
   }
 }
 
+
 ACTION SubMenu::get_action(int cursor_position) {
   return actions[cursor_position];
 }

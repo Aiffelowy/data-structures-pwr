@@ -2,6 +2,7 @@
 
 
 int main() {
+  //run the menu.
   Menu menu;
   menu.run();
 

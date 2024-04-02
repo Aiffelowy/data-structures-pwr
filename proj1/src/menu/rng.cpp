@@ -85,7 +85,7 @@ bool RNG::save_to_file(std::string path) {
 
 ArrayList<int> RNG::into_array() {
   ArrayList<int> arr;
-  arr.resize(this->length);
+  arr.resize(this->length+10);
   for(int i : *this) {
     arr.push(i);
   }
