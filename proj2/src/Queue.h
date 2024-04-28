@@ -95,4 +95,23 @@ void PriorityQueue<T>::show() const {
 	}
 }
 
+template<class T>
+T PriorityQueue<T>::extract_max() {
+	if (head == nullptr) {
+		std::cout << "Queue is empty " << std::endl;
+		return T();
+	}
+	T maxElement = head->element;
+	Node<T>* temp = head;
+	head = head->next;
+	if (head != nullptr) {
+		head->previous = nullptr;
+	}
+	delete temp;
+	size--;
+	std::cout << "Removed element: " << maxElement << std::endl;
+	
+	return maxElement;
+}
+
 #endif
