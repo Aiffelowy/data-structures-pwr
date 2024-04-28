@@ -51,7 +51,7 @@ public:
 	//changing priority 
 	void modify_key(const T& element, const T& priority);
 	//return size of Queue
-	int return_size();
+	T return_size() const;
 	//show the Queue
 	void show() const;
 };
@@ -112,6 +112,12 @@ T PriorityQueue<T>::extract_max() {
 	std::cout << "Removed element: " << maxElement << std::endl;
 	
 	return maxElement;
+}
+
+template<class T>
+T PriorityQueue<T>::return_size() const {
+	std::cout << "The size of the PriorityQueue is: " << size << std::endl;
+	return size;
 }
 
 #endif
