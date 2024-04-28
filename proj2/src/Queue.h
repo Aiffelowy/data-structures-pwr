@@ -47,9 +47,9 @@ public:
 	//remove and return the highest priority
 	T extract_max();
 	//return single element with the highest priority
-	void peek();
+	T peek() const;
 	//changing priority 
-	void modify_key(const T& element, const T& priority);
+	void modify_key(const T element, const T priority);
 	//return size of Queue
 	T return_size() const;
 	//show the Queue
@@ -120,4 +120,13 @@ T PriorityQueue<T>::return_size() const {
 	return size;
 }
 
+template<class T>
+T PriorityQueue<T>::peek() const {
+	if (head == nullptr) {
+		std::cout << "Queue is empty \n";
+		return T();
+	}
+	std::cout << "Element with the highest priority is: " << head->element << std::endl;
+	return head->element;
+}
 #endif
