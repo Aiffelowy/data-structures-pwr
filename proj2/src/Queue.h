@@ -49,7 +49,7 @@ public:
 	//return single element with the highest priority
 	T peek() const;
 	//changing priority 
-	void modify_key(const T element, const T priority);
+	void modify_key();
 	//return size of Queue
 	T return_size() const;
 	//show the Queue
@@ -89,10 +89,12 @@ template<class T>
 void PriorityQueue<T>::show() const {
 	Node<T>* current = head;
 	std::cout << "Numbers from Priority Queue: \n";
+	std::cout << "---------------------------------------------------" << std::endl;
 	while (current != nullptr) {
 		std::cout << "Element: " << current->element << " Priority: " << current->priority << std::endl;
 		current = current->next;
 	}
+	std::cout << "---------------------------------------------------" << std::endl;
 }
 
 template<class T>
@@ -128,5 +130,60 @@ T PriorityQueue<T>::peek() const {
 	}
 	std::cout << "Element with the highest priority is: " << head->element << std::endl;
 	return head->element;
+}
+
+template<class T>
+void PriorityQueue<T>::modify_key() {
+	if (head == nullptr) {
+		std::cout << "Queue is empty! \n";
+	}
+	T elementToModify;
+
+	show();
+
+	std::cout << "Select the element you wanna modify: ";
+	std::cin >> elementToModify;
+
+	Node<T>* current = head;
+
+	while (current != nullptr && current->element != elementToModify) {
+		current = current->next;
+	}
+
+	if (current == nullptr) {
+		std::cout << "Element not found \n";
+		modify_key();
+	}
+
+	T newPriority;
+	std::cout << "Enter the new priority for the element: ";
+	std::cin >> newPriority;
+
+	current->priority = newPriority;
+
+
+	while (current->priority != -1 && current->priority > current->previous->priority) {
+		Node<T>* temp = current->previous;
+		current->previous = temp->previous;
+		temp->next = current->next;
+		current->next = temp;
+		temp->previous = current;
+
+		if (temp->next != nullptr) {
+			temp->next->previous = temp;
+		}
+		if (current->previous != nullptr) {
+			current->previous->next = current;
+		}
+
+		if (temp == head) {
+			head = current;
+		}
+
+		if (current->previous == nullptr || current->priority <= current->previous->priority) {
+			break;
+		}
+	}
+	show();
 }
 #endif
