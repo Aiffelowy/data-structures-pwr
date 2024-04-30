@@ -34,8 +34,6 @@ private:
 
 public:
 	Node<T>* head;
-	Node<T> tail;
-
 
 	//construstor
 	PriorityQueue(void) : head(nullptr), tail(), size(0) {}
