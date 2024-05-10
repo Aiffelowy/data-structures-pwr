@@ -34,6 +34,8 @@ private:
 
 public:
 	Node<T>* head;
+	Node<T>* tail;
+
 
 	//construstor
 	PriorityQueue(void) : head(nullptr), tail(), size(0) {}
@@ -47,7 +49,7 @@ public:
 	//return single element with the highest priority
 	T peek() const;
 	//changing priority 
-	void modify_key();
+	void modify_key(const T& elementToModify, const T& newPriority);
 	//return size of Queue
 	T return_size() const;
 	//show the Queue
@@ -131,16 +133,10 @@ T PriorityQueue<T>::peek() const {
 }
 
 template<class T>
-void PriorityQueue<T>::modify_key() {
+void PriorityQueue<T>::modify_key(const T& elementToModify, const T& newPriority) {
 	if (head == nullptr) {
 		std::cout << "Queue is empty! \n";
 	}
-	T elementToModify;
-
-	show();
-
-	std::cout << "Select the element you wanna modify: ";
-	std::cin >> elementToModify;
 
 	Node<T>* current = head;
 
@@ -150,15 +146,9 @@ void PriorityQueue<T>::modify_key() {
 
 	if (current == nullptr) {
 		std::cout << "Element not found \n";
-		modify_key();
 	}
 
-	T newPriority;
-	std::cout << "Enter the new priority for the element: ";
-	std::cin >> newPriority;
-
 	current->priority = newPriority;
-
 
 	while (current->priority != -1 && current->priority > current->previous->priority) {
 		Node<T>* temp = current->previous;
@@ -184,4 +174,5 @@ void PriorityQueue<T>::modify_key() {
 	}
 	show();
 }
+
 #endif
