@@ -40,7 +40,7 @@ public:
 	//construstor
 	PriorityQueue(void) : head(nullptr), tail(), size(0) {}
 	//destructor
-	~PriorityQueue(void) {}
+	~PriorityQueue();
 
 	//add to queue
 	void insert(const T element, const T priority);
@@ -49,12 +49,23 @@ public:
 	//return single element with the highest priority
 	T peek() const;
 	//changing priority 
-	void modify_key(const T& elementToModify, const T& newPriority);
+	void modify_key(const int elementToModify, const int newPriority);
 	//return size of Queue
 	T return_size() const;
 	//show the Queue
 	void show() const;
 };
+
+template<class T>
+PriorityQueue<T>::~PriorityQueue() {
+	Node<T>* current = head;
+	Node<T>* next = nullptr;
+	while (current != nullptr) {
+		next = current->next;
+		delete current;
+		current = next;
+	}
+}
 
 template<class T>
 void PriorityQueue<T>::insert(const T element, const T priority) {
@@ -88,19 +99,15 @@ void PriorityQueue<T>::insert(const T element, const T priority) {
 template<class T>
 void PriorityQueue<T>::show() const {
 	Node<T>* current = head;
-	std::cout << "Numbers from Priority Queue: \n";
-	std::cout << "---------------------------------------------------" << std::endl;
 	while (current != nullptr) {
-		std::cout << "Element: " << current->element << " Priority: " << current->priority << std::endl;
 		current = current->next;
 	}
-	std::cout << "---------------------------------------------------" << std::endl;
 }
+
 
 template<class T>
 T PriorityQueue<T>::extract_max() {
 	if (head == nullptr) {
-		std::cout << "Queue is empty " << std::endl;
 		return T();
 	}
 	T maxElement = head->element;
@@ -111,31 +118,26 @@ T PriorityQueue<T>::extract_max() {
 	}
 	delete temp;
 	size--;
-	std::cout << "Removed element: " << maxElement << std::endl;
 	
 	return maxElement;
 }
 
 template<class T>
 T PriorityQueue<T>::return_size() const {
-	std::cout << "The size of the PriorityQueue is: " << size << std::endl;
 	return size;
 }
 
 template<class T>
 T PriorityQueue<T>::peek() const {
 	if (head == nullptr) {
-		std::cout << "Queue is empty \n";
 		return T();
 	}
-	std::cout << "Element with the highest priority is: " << head->element << std::endl;
 	return head->element;
 }
 
 template<class T>
-void PriorityQueue<T>::modify_key(const T& elementToModify, const T& newPriority) {
+void PriorityQueue<T>::modify_key(const int elementToModify, const int newPriority) {
 	if (head == nullptr) {
-		std::cout << "Queue is empty! \n";
 	}
 
 	Node<T>* current = head;
@@ -145,7 +147,7 @@ void PriorityQueue<T>::modify_key(const T& elementToModify, const T& newPriority
 	}
 
 	if (current == nullptr) {
-		std::cout << "Element not found \n";
+		return 0;
 	}
 
 	current->priority = newPriority;
