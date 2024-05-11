@@ -19,10 +19,12 @@ public:
 	Node<T>* next;
 	Node<T>* previous;
 
-	// constructor
+	//constructor
 	Node(void) : previous(nullptr), next(nullptr) {}
 	//destructor
 	~Node() {}		
+	//copy constructor
+
 };
 
 //ss
@@ -41,6 +43,9 @@ public:
 	PriorityQueue(void) : head(nullptr), tail(), size(0) {}
 	//destructor
 	~PriorityQueue();
+	PriorityQueue(const PriorityQueue<T>& other);
+	// copy assignment operator
+	PriorityQueue<T>& operator=(const PriorityQueue<T>& other);
 
 	//add to queue
 	void insert(const T element, const T priority);
@@ -55,6 +60,40 @@ public:
 	//show the Queue
 	void show() const;
 };
+
+template<class T>
+PriorityQueue<T>::PriorityQueue(const PriorityQueue<T>& other) : head(nullptr), tail(nullptr), size(0) {
+	Node<T>* current = other.head;
+	while (current != nullptr) {
+		insert(current->element, current->priority);
+		current = current->next;
+	}
+}
+
+template<class T>
+PriorityQueue<T>& PriorityQueue<T>::operator=(const PriorityQueue<T>& other) {
+	if (this == &other) {
+		return *this;
+	}
+	// Clear existing elements
+	Node<T>* current = head;
+	Node<T>* next = nullptr;
+	while (current != nullptr) {
+		next = current->next;
+		delete current;
+		current = next;
+	}
+	head = nullptr;
+	tail = nullptr;
+	size = 0;
+	// Copy elements from other
+	current = other.head;
+	while (current != nullptr) {
+		insert(current->element, current->priority);
+		current = current->next;
+	}
+	return *this;
+}
 
 template<class T>
 PriorityQueue<T>::~PriorityQueue() {
