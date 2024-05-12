@@ -4,10 +4,6 @@
 #include <functional>
 #include <iostream>
 
-// Priority Queue based on Linked List
-
-//check test
-
 //Node class
 
 template<class T>
@@ -27,8 +23,7 @@ public:
 
 };
 
-//ss
-
+//PriorityQueue class
 template<class T>
 class PriorityQueue {
 private:
@@ -61,6 +56,7 @@ public:
 	void show() const;
 };
 
+//copy constructor
 template<class T>
 PriorityQueue<T>::PriorityQueue(const PriorityQueue<T>& other) : head(nullptr), tail(nullptr), size(0) {
 	Node<T>* current = other.head;
@@ -70,6 +66,7 @@ PriorityQueue<T>::PriorityQueue(const PriorityQueue<T>& other) : head(nullptr), 
 	}
 }
 
+//copy operator
 template<class T>
 PriorityQueue<T>& PriorityQueue<T>::operator=(const PriorityQueue<T>& other) {
 	if (this == &other) {
@@ -95,6 +92,7 @@ PriorityQueue<T>& PriorityQueue<T>::operator=(const PriorityQueue<T>& other) {
 	return *this;
 }
 
+//destructor
 template<class T>
 PriorityQueue<T>::~PriorityQueue() {
 	Node<T>* current = head;
@@ -106,6 +104,7 @@ PriorityQueue<T>::~PriorityQueue() {
 	}
 }
 
+//insert method
 template<class T>
 void PriorityQueue<T>::insert(const T element, const T priority) {
 	Node<T>* newNode = new Node<T>;
@@ -135,15 +134,17 @@ void PriorityQueue<T>::insert(const T element, const T priority) {
 	size++;
 }
 
+//show method
 template<class T>
 void PriorityQueue<T>::show() const {
 	Node<T>* current = head;
 	while (current != nullptr) {
+		std::cout << "My priority_queue: " << current->element << "," << current->priority << std::endl;
 		current = current->next;
 	}
 }
 
-
+//extract_max method
 template<class T>
 T PriorityQueue<T>::extract_max() {
 	if (head == nullptr) {
@@ -161,11 +162,13 @@ T PriorityQueue<T>::extract_max() {
 	return maxElement;
 }
 
+//return_size method
 template<class T>
 T PriorityQueue<T>::return_size() const {
 	return size;
 }
 
+//peek method
 template<class T>
 T PriorityQueue<T>::peek() const {
 	if (head == nullptr) {
@@ -174,6 +177,7 @@ T PriorityQueue<T>::peek() const {
 	return head->element;
 }
 
+//modify_key method
 template<class T>
 void PriorityQueue<T>::modify_key(const int elementToModify, const int newPriority) {
 	if (head == nullptr) {
@@ -213,7 +217,6 @@ void PriorityQueue<T>::modify_key(const int elementToModify, const int newPriori
 			break;
 		}
 	}
-	show();
 }
 
 #endif
