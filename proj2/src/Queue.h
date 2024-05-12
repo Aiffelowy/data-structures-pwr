@@ -117,6 +117,16 @@ void PriorityQueue<T>::insert(const T element, const T priority) {
 			head->previous = newNode;
 		}
 		head = newNode;
+		if (tail == nullptr) {
+			tail = newNode;
+		}
+	}
+	// checking if it's better to add element at the end
+	else if (priority <= tail->priority) {
+		newNode->next = nullptr;
+		newNode->previous = tail;
+		tail->next = newNode;
+		tail = newNode;
 	}
 	// searching for proper place
 	else {
