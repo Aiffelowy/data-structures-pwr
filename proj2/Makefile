@@ -36,7 +36,9 @@ $(SO_PLUGINS): $(OBJ_PLUGINS)
 MAKE: clean clean_plugins
 	$(MAKE) -j$(THREADS) all
 
-all: $(EXEC) $(SO_PLUGINS)
+plugins: clean_plugins $(SO_PLUGINS)
+
+all: $(EXEC) plugins
 
 clearscr:
 	clear
@@ -44,4 +46,4 @@ clearscr:
 run: clean clearscr $(EXEC)
 	./$(EXEC)
 
-.PHONY: all clean $(EXEC) default
+.PHONY: all clean $(EXEC) plugins default
