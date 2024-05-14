@@ -1,9 +1,11 @@
 #include "parser.hpp"
 #include "menu.hpp"
+#include "builtin_actions.hpp"
 
 #include <algorithm>
 #include <cctype>
 #include <fstream>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -45,6 +47,16 @@ std::string Parser::remove_spaces_qouted(std::string str) {
   return new_string;
 }
 
+void build_in(CaCtx& cactx) {
+  CA ca("Back");
+  ca.so_file = "builtin";
+  cactx.avail_types.push_back(ca);
+  ca.name = "Quit";
+  cactx.avail_types.push_back(ca);
+  ca.name = "ChangeMenu";
+  ca.args= {"label", "destination"};
+  cactx.avail_types.push_back(ca);
+}
 
 Result::Result<Menu, CfgError> Parser::to_menu() {
   Menu menu;
@@ -55,6 +67,8 @@ Result::Result<Menu, CfgError> Parser::to_menu() {
   
   std::vector<MnCtx> menu_ctxs;
   CaCtx cactx;
+
+  build_in(cactx);
 
   while(std::getline(file, line)) {
     std::string key;
@@ -112,7 +126,16 @@ Result::Result<Menu, CfgError> Parser::to_menu() {
                     braces--;
                     break;
                   }
-                  CA& type = cactx.get_type(action_key).unwrap();
+                  CA type = cactx.get_type(action_key).unwrap();
+                  if(type.so_file == "builtin") {
+                    if(type.name == "Back") {
+                      mctx.actions.push_back(std::make_shared<Actions::Back>(Actions::Back()));
+                    }
+                    else if(type.name == "Quit") {
+                      mctx.actions.push_back(std::make_shared<Actions::Quit>(Actions::Quit()));
+                    }
+                    continue;
+                  }
                   //create action
                   for(auto& shared_lib : menu.open_shared_libraries) {
                     if(shared_lib.get_path() == type.so_file)
@@ -143,7 +166,15 @@ Result::Result<Menu, CfgError> Parser::to_menu() {
                     return Result::Err(CfgError::UnknownKeyword);
                   
 
+                  if(type.so_file == "builtin") {
+                    if(type.name == "ChangeMenu") {
+                      mctx.actions.push_back(std::make_shared<Actions::ChangeMenu>(Actions::ChangeMenu(args[0], args[1])));
+                    }
+                    continue;
+                  }
+
                   std::shared_ptr<Actions::Action> p;
+
                   //create action with arguments;
                   for(auto& shared_lib : menu.open_shared_libraries) {
                     if(shared_lib.get_path() != type.so_file)

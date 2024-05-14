@@ -22,7 +22,10 @@ SubMenu::~SubMenu() {}
 
 
 void SubMenu::draw() {
-  Misc::println("{}\n{}\n\n{}\n\n", title, subtitle, additional_text);
+  Misc::println("{}\n{}\n\n", title, subtitle);
+  for(const auto& [t, r] : additional_text) {
+    Misc::println("{}: {}", t, r);
+  }
   int i = 0;
   for(auto action : actions) {
     Misc::println("  {} {}", (i == menu_p->cursor_position) ? ">" : " ", action->get_label());

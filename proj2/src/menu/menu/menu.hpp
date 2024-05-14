@@ -64,7 +64,6 @@ private:
   std::string id;
   std::string title;
   std::string subtitle;
-  std::string additional_text = "";
   Menu* menu_p = nullptr;
   int cursor_limit = 0;
 
@@ -75,6 +74,8 @@ private:
 public:
 
   std::map<std::string, std::any> data;
+  
+  std::map<std::string, std::string> additional_text;
 
   SubMenu(std::string id);
 
