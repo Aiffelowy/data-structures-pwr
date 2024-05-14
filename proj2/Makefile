@@ -5,7 +5,7 @@ RM        = rm -f
 
 THREADS = $(shell nproc)
 
-SRC  = $(wildcard src/*.cpp src/*/*.cpp)
+SRC  = $(wildcard src/*.cpp src/*/*/*.cpp)
 OBJ  = $(SRC:.cpp=.o)
 EXEC = menu
 
