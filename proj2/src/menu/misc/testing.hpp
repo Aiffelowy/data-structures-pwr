@@ -62,7 +62,7 @@ public:
       TestResult sum(0, true);
 
       for(int j = 0; j < samples_per_test; j++) {
-        Misc::println("Testing \"{}\" on data size {}: run: {} sample: {}", name, data_size, i, j);
+        Misc::println("Testing \"{}\" on data size {}: run: {} sample: {}", name, data_size, i+1, j+1);
         sum += fn_test(rng);
       }
       sum.time = sum.time/samples_per_test;

@@ -1,6 +1,8 @@
 #ifndef MENU_H
 #define MENU_H
 
+#include <any>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -71,6 +73,9 @@ private:
   void perform_action(int cursor_position);
 
 public:
+
+  std::map<std::string, std::any> data;
+
   SubMenu(std::string id);
 
   SubMenu(const SubMenu& other);
