@@ -118,6 +118,8 @@ private:
   bool running = true;
 
 public:
+  std::map<std::string, std::any> crossmenu_data;
+
   Menu();
 
   Menu(const Menu& other);

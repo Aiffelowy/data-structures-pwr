@@ -10,7 +10,9 @@
 
 namespace Misc {
 
-void print(const char * fmt);
+[[maybe_unused]] static void print(const char * fmt) {
+  std::cout << fmt;
+}
 
 template<typename T, typename... Args>
 void print(const char * fmt, T v , Args... args) {
@@ -31,7 +33,9 @@ void println(const char * fmt, Args... args) {
 }
 
 
-void eprint(const char * fmt);
+[[maybe_unused]] static void eprint(const char * fmt) {
+  std::cerr << fmt;
+}
 
 template<typename T, typename... Args>
 void eprint(const char * fmt, T v, Args... args) {
@@ -61,9 +65,14 @@ Result::Result<T, Errors::InputError> user_input() {
   return Result::Ok(input);
 }
 
-void fix_cin();
+[[maybe_unused]] static void fix_cin() {
+  std::cin.clear();
+  std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+}
 
-void fmt_string(std::stringstream& ss, const char* fmt);
+[[maybe_unused]] static void fmt_string(std::stringstream& ss, const char* fmt) {
+  ss << fmt;
+}
 
 template<typename T, typename... Args>
 void fmt_string(std::stringstream& ss, const char* fmt, T v, Args... args) {
@@ -84,7 +93,13 @@ std::string format_string(const char* fmt, Args... args) {
   return ss.str();
 }
 
-void clear_screen(void);
+[[maybe_unused]] static void clear_screen(void) {
+ #if defined(_WIN32) || defined(__WIN32__) || defined(_MSC_VER)
+    [[maybe_unused]] int shut_up = std::system("cls");
+  #else
+    [[maybe_unused]] int shut_up = std::system("clear");
+  #endif
+}
 
 
 }
