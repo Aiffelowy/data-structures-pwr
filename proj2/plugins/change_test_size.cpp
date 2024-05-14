@@ -1,4 +1,5 @@
 #include "action_template.hpp"
+#include "../src/menu/misc/misc.hpp"
 
 namespace MenuN::Actions {
 
@@ -30,12 +31,19 @@ extern "C" {
 
 #endif
 
-CustomAction::CustomAction() : Action("CustomAction") {}
+CustomAction::CustomAction() : Action("Set Number of Tests") {}
 
 
 CustomAction::~CustomAction() {}
 
 
-void CustomAction::action() {}
+void CustomAction::action() {
+  Misc::clear_screen();
+  Misc::print("Type new number of tests: ");
+  int size = Misc::user_input<int>().expect("Invalid data type");
+
+  submenu_p->data["test_size"] = size;
+  submenu_p->additional_text["test_size"] = Misc::format_string("{}", size);
+}
 
 }

@@ -7,8 +7,11 @@
 namespace MenuN::Actions {
 
 class CustomAction : public Action {
+private:
+  std::string destination;
+
 public:
-  CustomAction();
+  CustomAction(std::string);
 
   ~CustomAction();
 
