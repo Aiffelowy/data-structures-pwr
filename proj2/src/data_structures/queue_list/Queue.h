@@ -43,7 +43,7 @@ public:
 	PriorityQueue<T>& operator=(const PriorityQueue<T>& other);
 
 	//add to queue
-	void insert(const T element, const T priority);
+	void insert(const int element, const int priority);
 	//remove and return the highest priority
 	T extract_max();
 	//return single element with the highest priority
@@ -106,7 +106,7 @@ PriorityQueue<T>::~PriorityQueue() {
 
 //insert method
 template<class T>
-void PriorityQueue<T>::insert(const T element, const T priority) {
+void PriorityQueue<T>::insert(const int element, const int priority) {
 	Node<T>* newNode = new Node<T>;
 	newNode->element = element;
 	newNode->priority = priority;
