@@ -10,7 +10,7 @@ template<class T>
 class Node {
 public:
 	T element;
-	T priority;
+	int priority;
 
 	Node<T>* next;
 	Node<T>* previous;
@@ -43,13 +43,13 @@ public:
 	PriorityQueue<T>& operator=(const PriorityQueue<T>& other);
 
 	//add to queue
-	void insert(const int element, const int priority);
+	void insert(const T element, const int priority);
 	//remove and return the highest priority
 	T extract_max();
 	//return single element with the highest priority
 	T peek() const;
 	//changing priority 
-	void modify_key(const int elementToModify, const int newPriority);
+	void modify_key(const T elementToModify, const int newPriority);
 	//return size of Queue
 	T return_size() const;
 	//show the Queue
@@ -106,7 +106,7 @@ PriorityQueue<T>::~PriorityQueue() {
 
 //insert method
 template<class T>
-void PriorityQueue<T>::insert(const int element, const int priority) {
+void PriorityQueue<T>::insert(const T element, const int priority) {
 	Node<T>* newNode = new Node<T>;
 	newNode->element = element;
 	newNode->priority = priority;
