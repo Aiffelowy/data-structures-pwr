@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <any>
+#include <chrono>
 
 namespace MenuN::Actions {
 
@@ -40,6 +41,8 @@ extern "C" {
 
 using TestThings::TestSuite, TestThings::TestResult, TestThings::Test, TestThings::RNG;
 
+using TimeUnit = std::chrono::nanoseconds;
+
 void from_rng(PriorityQueue<int>& pq, const RNG& rng) {
   for(const auto& n : rng) {
     pq.insert(n, n);
@@ -57,21 +60,21 @@ void from_rng(PriorityQueueHeap<int>& pq, const RNG& rng) {
 TestResult test_heap_push(const RNG& rng) {
   PriorityQueueHeap<int> pq;
   from_rng(pq, rng);
-  long time = TestThings::test_time([&pq, &rng](){ pq.insert(rng[6], rng[9]); });
+  long time = M_test_time(TimeUnit, { pq.insert(rng[6], rng[9]); });
   return TestResult(true, time);
 }
 
 TestResult test_heap_pop(const RNG& rng) {
   PriorityQueueHeap<int> pq;
   from_rng(pq, rng);
-  long time = TestThings::test_time([&pq](){ pq.extract_max(); });
+  long time = M_test_time(TimeUnit, { pq.extract_max(); });
   return TestResult(true, time);
 }
 
 TestResult test_heap_peek(const RNG& rng) {
   PriorityQueueHeap<int> pq;
   from_rng(pq, rng);
-  long time = TestThings::test_time([&pq](){ pq.peek(); });
+  long time = M_test_time(TimeUnit, { pq.peek(); });
   return TestResult(true, time);
 }
 
@@ -79,14 +82,14 @@ TestResult test_heap_change_priority(const RNG& rng) {
   PriorityQueueHeap<int> pq;
   from_rng(pq, rng);
   int index = rng[69] % rng.len();
-  long time = TestThings::test_time([&pq, &rng, index](){ pq.modify_key(index, rng[69]); });
+  long time = M_test_time(TimeUnit, { pq.modify_key(index, rng[69]); });
   return TestResult(true, time);
 }
 
 TestResult test_heap_len(const RNG& rng) {
   PriorityQueueHeap<int> pq;
   from_rng(pq, rng);
-  long time = TestThings::test_time([&pq](){ pq.return_size(); });
+  long time = M_test_time(TimeUnit, { pq.return_size(); });
   return TestResult(true, time);
 }
 
@@ -97,21 +100,21 @@ TestResult test_heap_len(const RNG& rng) {
 TestResult test_list_push(const RNG& rng) {
   PriorityQueue<int> pq;
   from_rng(pq, rng);
-  long time = TestThings::test_time([&pq, &rng](){ pq.insert(rng[6], rng[9]); });
+  long time = M_test_time(TimeUnit, { pq.insert(rng[6], rng[9]); });
   return TestResult(true, time);
 }
 
 TestResult test_list_pop(const RNG& rng) {
   PriorityQueue<int> pq;
   from_rng(pq, rng);
-  long time = TestThings::test_time([&pq](){ pq.extract_max(); });
+  long time = M_test_time(TimeUnit, { pq.extract_max(); });
   return TestResult(true, time);
 }
 
 TestResult test_list_peek(const RNG& rng) {
   PriorityQueue<int> pq;
   from_rng(pq, rng);
-  long time = TestThings::test_time([&pq](){ pq.peek(); });
+  long time = M_test_time(TimeUnit, { pq.peek(); });
   return TestResult(true, time);
 }
 
@@ -119,14 +122,14 @@ TestResult test_list_change_priority(const RNG& rng) {
   PriorityQueue<int> pq;
   from_rng(pq, rng);
   int index = rng[69] % rng.len();
-  long time = TestThings::test_time([&pq, &rng, index](){ pq.modify_key(index, rng[69]); });
+  long time = M_test_time(TimeUnit, { pq.modify_key(index, rng[69]); });
   return TestResult(true, time);
 }
 
 TestResult test_list_len(const RNG& rng) {
   PriorityQueue<int> pq;
   from_rng(pq, rng);
-  long time = TestThings::test_time([&pq](){ pq.return_size(); });
+  long time = M_test_time(TimeUnit, { pq.return_size(); });
   return TestResult(true, time);
 }
 
@@ -151,7 +154,7 @@ void CustomAction::action() {
     .set_number_of_tests(std::any_cast<int>(submenu_p->data.at("test_size")))
     .set_number_of_tests_per_data(std::any_cast<int>(submenu_p->data.at("sample_size")));
 
-  if(std::any_cast<bool>(submenu_p->data.at("ds_type"))) {
+  if(!std::any_cast<bool>(submenu_p->data.at("ds_type"))) {
     tests
       .add_test(Test("insert", test_heap_push))
       .add_test(Test("extract-max", test_heap_pop))
