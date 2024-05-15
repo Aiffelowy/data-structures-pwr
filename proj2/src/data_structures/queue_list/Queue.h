@@ -16,7 +16,7 @@ public:
 	Node<T>* previous;
 
 	//constructor
-	Node(void) : previous(nullptr), next(nullptr) {}
+	Node(void) : next(nullptr), previous(nullptr) {}
 	//destructor
 	~Node() {}		
 	//copy constructor
@@ -35,7 +35,7 @@ public:
 
 
 	//construstor
-	PriorityQueue(void) : head(nullptr), tail(), size(0) {}
+	PriorityQueue(void) : size(0), head(nullptr), tail(){}
 	//destructor
 	~PriorityQueue();
 	PriorityQueue(const PriorityQueue<T>& other);
@@ -58,7 +58,7 @@ public:
 
 //copy constructor
 template<class T>
-PriorityQueue<T>::PriorityQueue(const PriorityQueue<T>& other) : head(nullptr), tail(nullptr), size(0) {
+PriorityQueue<T>::PriorityQueue(const PriorityQueue<T>& other) : size(0), head(nullptr), tail(nullptr) {
 	Node<T>* current = other.head;
 	while (current != nullptr) {
 		insert(current->element, current->priority);
@@ -200,7 +200,7 @@ void PriorityQueue<T>::modify_key(const int elementToModify, const int newPriori
 	}
 
 	if (current == nullptr) {
-		return 0;
+		return;
 	}
 
 	current->priority = newPriority;
