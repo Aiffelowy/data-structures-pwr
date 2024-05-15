@@ -10,6 +10,25 @@
 
 namespace TestThings {
 
+template<typename F, typename TimeUnit = std::chrono::nanoseconds>
+int test_time(F&& fn_to_test) {
+  auto start = std::chrono::high_resolution_clock::now();
+  fn_to_test();
+  auto stop = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<TimeUnit>(stop - start);
+  return duration.count();
+}
+
+
+#define M_test_time(TimeUnit, Body)\
+[&](){\
+  auto start = std::chrono::high_resolution_clock::now();\
+  Body\
+  auto stop = std::chrono::high_resolution_clock::now();\
+  return std::chrono::duration_cast<TimeUnit>(stop - start).count();\
+}()
+
+
 
 struct TestResult {
   bool passed;
@@ -31,16 +50,6 @@ struct Test {
 
   Test(std::string label, std::function<TestResult(const RNG&)> fn) : label(label), test(fn) {}
 };
-
-
-template<typename F, typename TimeUnit = std::chrono::nanoseconds>
-int test_time(F&& fn_to_test) {
-  auto start = std::chrono::high_resolution_clock::now();
-  fn_to_test();
-  auto stop = std::chrono::high_resolution_clock::now();
-  auto duration = std::chrono::duration_cast<TimeUnit>(stop - start);
-  return duration.count();
-}
 
 
 template<typename TimeUnit = std::chrono::nanoseconds>
