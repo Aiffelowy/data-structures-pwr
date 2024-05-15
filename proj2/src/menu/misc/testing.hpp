@@ -8,6 +8,14 @@
 #include <fstream>
 #include <functional>
 
+#define M_test_time(TimeUnit, Body)\
+[&]() -> uint64_t {\
+  auto start = std::chrono::high_resolution_clock::now();\
+  Body\
+  auto stop = std::chrono::high_resolution_clock::now();\
+  return std::chrono::duration_cast<TimeUnit>(stop - start).count();\
+}()
+
 namespace TestThings {
 
 template<typename F, typename TimeUnit = std::chrono::nanoseconds>
@@ -18,17 +26,6 @@ int test_time(F&& fn_to_test) {
   auto duration = std::chrono::duration_cast<TimeUnit>(stop - start);
   return duration.count();
 }
-
-
-#define M_test_time(TimeUnit, Body)\
-[&](){\
-  auto start = std::chrono::high_resolution_clock::now();\
-  Body\
-  auto stop = std::chrono::high_resolution_clock::now();\
-  return std::chrono::duration_cast<TimeUnit>(stop - start).count();\
-}()
-
-
 
 struct TestResult {
   bool passed;
