@@ -3,17 +3,23 @@
 
 #include <iostream>
 
+//node class
 template <class T>
 class Node {
 public:
 	int key;
-	int value;
+	T value;
 	Node* next;
 
-	Node();
-	~Node();
+	//constructor
+	Node(int key, T vaule) : key(key), value(value), next(nullptr);
+	
+	//destructor
+	~Node(void);
 };
 
+
+//Hash Table class
 template <class T>
 class HashTable {
 private:
@@ -25,11 +31,25 @@ private:
 	}
 
 public:
+	//construdtor
+	HashTable(int size) : size(size) {
+		table = new Node * [size]; // pointers array
+	}
 
-	HashTable();
-	~HashTable();
+	//destructor
+	~HashTable() {
+		for (int i = 0; i < size; ++i) {
+			Node* current = table[i];
+			while (current != nullptr) {
+				Node* temp = current;
+				current = current->next;
+				delete temp;
+			}
+		}
+		delete[] table;
+	}
 
-	void insert(int key, int value);
+	void insert(int key, T value);
 	void remove(int key);
 };
 
