@@ -23,11 +23,25 @@ template <class T>
 class HashTable {
 private:
     int size;
+    int capacity;
     Node<T>** table;  
 
     // hash function
     int hashFunction(int key) {
         return key % size;
+    }
+
+    Node<T>* copyList(Node<T>* head) {
+        if (!head) return nullptr;
+        Node<T>* newHead = new Node<T>(head->key, head->value);
+        Node<T>* current = newHead;
+        Node<T>* source = head->next;
+        while (source) {
+            current->next = new Node<T>(source->key, source->value);
+            current = current->next;
+            source = source->next;
+        }
+        return newHead;
     }
 
 public:
@@ -89,7 +103,6 @@ void HashTable<T>::remove(int key) {
     }
     size--;
 }
-
 
 #endif 
 
