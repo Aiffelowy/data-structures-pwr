@@ -24,13 +24,13 @@ class HashTable {
 private:
     int size;
     int capacity;
-    Node<T>** table;  
+    Node<T>** table; 
 
     // hash function
     int hashFunction(int key) {
         return key % size;
     }
-
+    //helper to copy our list (for rule of three)
     Node<T>* copyList(Node<T>* head) {
         if (!head) return nullptr;
         Node<T>* newHead = new Node<T>(head->key, head->value);
@@ -44,15 +44,51 @@ private:
         return newHead;
     }
 
+
 public:
     // constructor
-    HashTable(int size) : size(size) {
-        table = new Node<T>*[size]();  
+    HashTable(int capacity) : size(0), capacity(capacity) {
+        table = new Node<T>*[capacity]();  
     }
 
-    // destructor
+    //copy constructor
+    HashTable(const HashTable& other) : size(other.size), capacity(other.capacity) {
+        table = new Node<T>*[capacity]();
+        for (int i = 0; i < capacity; ++i) {
+            table[i] = copyList(other.table[i]);
+        }
+    }
+    
+    //copy operator
+    HashTable& operator=(const HashTable& other) {
+        if (this == &other) {
+            return *this;
+        }
+
+        for (int i = 0; i < capacity; ++i) {
+            Node<T>* current = table[i];
+            while (current != nullptr) {
+                Node<T>* temp = current;
+                current = current->next;
+                delete temp;
+            }
+        }
+        delete[] table;
+
+        // Copy new resources
+        size = other.size;
+        capacity = other.capacity;
+        table = new Node<T>*[capacity]();
+        for (int i = 0; i < capacity; ++i) {
+            table[i] = copyList(other.table[i]);
+        }
+
+        return *this;
+    }
+
+    // Destructor
     ~HashTable() {
-        for (int i = 0; i < size; ++i) {
+        for (int i = 0; i < capacity; ++i) {
             Node<T>* current = table[i];
             while (current != nullptr) {
                 Node<T>* temp = current;
@@ -63,9 +99,10 @@ public:
         delete[] table;
     }
 
-    // insert method
+    // Insert method
     void insert(int key, T value);
-    // remove method
+
+    // Remove method
     void remove(int key);
 };
 
