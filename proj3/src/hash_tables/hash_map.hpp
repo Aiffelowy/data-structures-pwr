@@ -1,3 +1,5 @@
+#include <iostream>
+#include <string>
 #ifndef HASH_TABLE_HPP
 
 #include <cstddef>
@@ -20,7 +22,7 @@ struct pair {
 template<typename K, typename T, typename HashGen = HashGenerator<K>>
 struct Cuckoo;
 
-template<typename Key, typename Value, typename MapType>
+template<typename Key, typename Value, typename MapType = Cuckoo<Key, Value>>
 struct HashMap {
 private:
   struct Node {
@@ -111,19 +113,43 @@ concept is_valid_map_t = requires(const Key& key, Value value, HashMap<Key, Valu
 
 template<typename Key>
 struct HashGenerator{
-  static std::size_t hash(const Key& k, const int& buffer_size) = 0;
+  static std::size_t hash(const Key&, const int&) = 0;
+};
+
+template<>
+struct HashGenerator<int> {
+  static std::size_t hash(const int& key, const int& buffer_size) {
+    int hash = 42069;
+    std::string key_str = std::to_string(key);
+    for(const char& c : key_str) {
+      hash = ((hash << 5) + hash) + c;
+    }
+    if(buffer_size == 0)
+      return hash % 1;
+    return hash % buffer_size;
+  }
+};
+
+template<>
+struct HashGenerator<std::string> {
+  static std::size_t hash(const std::string& key, const int& bs) {
+    int hash = 42069;
+    for(const char& c : key) {
+      hash = ((hash << 5) + hash) + c;
+    }
+    if(!bs)
+      return hash %1;
+    return hash % bs; 
+  }
 };
 
 
 template<typename K, typename T, typename HashGen>
 struct Cuckoo {
   using Buffer = HashMap<K, T, Cuckoo>::Buffer;
-  static void insert(const K&, T, Buffer&) {
-    
-  }
-
-  static void remove(const K&, Buffer&);
-  static T& find(const K&, Buffer&);
+  static void insert(const K& key, T item, Buffer& buffer) {}
+  static void remove(const K&, Buffer&) {}
+  static T& find(const K&, Buffer&) {}
 };
 
 
