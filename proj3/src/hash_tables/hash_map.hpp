@@ -1,8 +1,7 @@
-#include <algorithm>
-#include <concepts>
 #ifndef HASH_TABLE_HPP
 
 #include <cstddef>
+#include <concepts>
 
 
 namespace Hash1 {
@@ -62,7 +61,12 @@ public:
     Node* operator[](const std::size_t&);
 
     void free();
+    void resize_buffer(const std::size_t&);
     Node** clone_buffer() const;
+
+    void push(Node*);
+    void remove(const std::size_t&);
+    Value pop();
 
     Node** begin();
     Node** begin() const;
@@ -114,7 +118,10 @@ struct HashGenerator{
 template<typename K, typename T, typename HashGen>
 struct Cuckoo {
   using Buffer = HashMap<K, T, Cuckoo>::Buffer;
-  static void insert(const K&, T, Buffer&);
+  static void insert(const K&, T, Buffer&) {
+    
+  }
+
   static void remove(const K&, Buffer&);
   static T& find(const K&, Buffer&);
 };
@@ -176,13 +183,57 @@ void HashMap<K, T, MapType>::Buffer::free() {
     delete *n;
   }
   delete [] buffer;
+  buffer = nullptr;
 }
 
 template<typename K, typename T, typename MapType>
 HashMap<K, T, MapType>::Node** HashMap<K, T, MapType>::Buffer::clone_buffer() const {
   Node** new_buffer = new Node*[buffer_size];
-  std::copy(&buffer[0], &buffer[buffer_size], &new_buffer[0]);
+  for(std::size_t i = 0; i < length; i++)
+    new_buffer[i] = new Node(*buffer[i]);
+
   return new_buffer;
+}
+
+template<typename K, typename T, typename MapType>
+void HashMap<K, T, MapType>::Buffer::resize_buffer(const std::size_t& new_size) {
+  Node** new_buffer = new Node*[new_size];
+  if(new_size < length)
+    length = new_size;
+
+  for(std::size_t i = 0; i < length; i++)
+    new_buffer[i] = new Node(*buffer[i]);
+
+  this->free();
+  buffer_size = new_size;
+  buffer = new_buffer;
+}
+
+template<typename K, typename T, typename MapType>
+void HashMap<K, T, MapType>::Buffer::push(Node* new_node) {
+  if(length == buffer_size) {
+    if(buffer_size == 0)
+      this->resize_buffer(2);
+    else
+      this->resize_buffer(buffer_size*2);
+  }
+
+  buffer[length] = new_node;
+  length++;
+}
+
+template<typename K, typename T, typename MapType>
+T HashMap<K, T, MapType>::Buffer::pop() {
+  length--;
+  return buffer[length];
+}
+
+template<typename K, typename T, typename MapType>
+void HashMap<K, T, MapType>::Buffer::remove(const std::size_t& position) {
+  length--;
+  for(auto i = position; i < length; i++) {
+    buffer[i] = buffer[i+1];
+  }
 }
 
 template<typename K, typename T, typename MapType>
