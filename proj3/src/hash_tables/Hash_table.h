@@ -2,6 +2,7 @@
 #define HASHTABLE_H
 
 #include <iostream>
+#include <string>
 
 namespace Hash2 {
 
@@ -63,9 +64,16 @@ HashTable<T>::~HashTable() {
     delete[] table;
 }
 
+// DJB2 hashFunction
 template <class T>
 int HashTable<T>::hashFunction(int key) {
-    return key % size;
+    int hash = 5381;
+    int c;
+    std::string key_str = std::to_string(key);
+    for (char c : key_str) {
+        hash = ((hash << 5) + hash) + c; // hash * 33 + c
+    }
+    return hash % size;
 }
 
 template <class T>
