@@ -1,8 +1,8 @@
-#include <iostream>
-#include <string>
 #ifndef HASH_TABLE_HPP
+#define HASH_TABLE_HPP
 
 #include <cstddef>
+#include <string>
 #include <concepts>
 
 
@@ -52,6 +52,7 @@ public:
     std::size_t length;
 
     Buffer();
+    Buffer(std::size_t);
     ~Buffer();
 
     Buffer(const Buffer&);
@@ -77,6 +78,7 @@ public:
   } buffer;
 
   HashMap();
+  HashMap(std::size_t);
 
   Value& operator[](const Key&);
 
@@ -160,6 +162,10 @@ struct Cuckoo {
 template<typename K, typename T, typename MapType>
 HashMap<K, T, MapType>::Buffer::Buffer():
   buffer(nullptr), buffer_size(0), length(0) {}
+
+template<typename K, typename T, typename MapType>
+HashMap<K, T, MapType>::Buffer::Buffer(std::size_t prealloc_size):
+  buffer(new Node*[prealloc_size]), buffer_size(prealloc_size), length(0) {}
 
 template<typename K, typename T, typename MapType>
 HashMap<K, T, MapType>::Buffer::~Buffer() {
@@ -339,6 +345,10 @@ HashMap<K, T, MapType>::HashMap() {
   static_assert(is_valid_map_t<MapType, K, T>, "\nMapType has to implement:\n 'static void insert(const Key&, Value)'\n 'static void remove(const Key&)'\n 'static Value& find(const Key&)'");
 }
 
+template<typename K, typename T, typename MapType>
+HashMap<K, T, MapType>::HashMap(std::size_t prealloc_size): buffer(prealloc_size) {
+  static_assert(is_valid_map_t<MapType, K, T>, "\nMapType has to implement:\n 'static void insert(const Key&, Value)'\n 'static void remove(const Key&)'\n 'static Value& find(const Key&)'");
+}
 
 template<typename K, typename T, typename MapType>
 void HashMap<K, T, MapType>::insert(const K& key, T value) {
