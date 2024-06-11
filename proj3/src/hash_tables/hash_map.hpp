@@ -8,10 +8,7 @@
 namespace Hash1 {
 
 template<typename K>
-struct HashGenerator {
-  static std::size_t hash(const K& k) = 0;
-};
-
+struct HashGenerator;
 
 template<typename F, typename S>
 struct pair {
@@ -20,6 +17,9 @@ struct pair {
 
   pair(F f, S s): first(f), second(s) {}
 };
+
+template<typename K, typename T, typename HashGen = HashGenerator<K>>
+struct Cuckoo;
 
 template<typename Key, typename Value, typename MapType>
 struct HashMap {
@@ -44,6 +44,7 @@ private:
       Node& operator=(Node&&);
   };
 
+public:
   struct Buffer { 
     Node** buffer;
     std::size_t buffer_size;
@@ -69,7 +70,6 @@ private:
     Node** end() const;
   } buffer;
 
-public:
   HashMap();
 
   Value& operator[](const Key&);
@@ -86,6 +86,37 @@ public:
   pair<Key, Value>* end();
   pair<Key, Value>* end() const;
 
+};
+
+
+
+
+
+template<typename HashGen, typename Key>
+concept has_hash = requires(const Key& key, const int& buffer_size) {
+  { HashGen::hash(key, buffer_size) } -> std::convertible_to<std::size_t>;
+};
+
+template<typename MapType, typename Key, typename Value>
+concept is_valid_map_t = requires(const Key& key, Value value, HashMap<Key, Value, MapType>::Buffer& buffer) {
+  { MapType::insert(key, value, buffer) } -> std::convertible_to<void>;
+  { MapType::remove(key, buffer) } -> std::convertible_to<void>;
+  { MapType::find(key, buffer) } -> std::convertible_to<Value&>;
+};
+
+
+template<typename Key>
+struct HashGenerator{
+  static std::size_t hash(const Key& k, const int& buffer_size) = 0;
+};
+
+
+template<typename K, typename T, typename HashGen>
+struct Cuckoo {
+  using Buffer = HashMap<K, T, Cuckoo>::Buffer;
+  static void insert(const K&, T, Buffer&);
+  static void remove(const K&, Buffer&);
+  static T& find(const K&, Buffer&);
 };
 
 
@@ -141,8 +172,8 @@ void HashMap<K, T, MapType>::Buffer::free() {
   if(!buffer)
     return;
 
-  for(Node* n = &buffer[0]; n != &buffer[length]; n++) {
-    delete n;
+  for(Node** n = &buffer[0]; n != &buffer[length]; n++) {
+    delete *n;
   }
   delete [] buffer;
 }
@@ -228,6 +259,7 @@ typename HashMap<K, T, MapType>::Node* HashMap<K, T, MapType>::Node::clone() con
 
 template<typename K, typename T, typename MapType>
 HashMap<K, T, MapType>::HashMap() {
+  static_assert(is_valid_map_t<MapType, K, T>, "\nMapType has to implement:\n 'static void insert(const Key&, Value)'\n 'static void remove(const Key&)'\n 'static Value& find(const Key&)'");
 }
 
 
