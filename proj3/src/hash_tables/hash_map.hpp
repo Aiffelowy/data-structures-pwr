@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <concepts>
 #ifndef HASH_TABLE_HPP
 
 #include <cstddef>
@@ -7,9 +8,10 @@
 namespace Hash1 {
 
 template<typename K>
-struct hash {
-  std::size_t operator()(const K& k) = 0;
+struct HashGenerator {
+  static std::size_t hash(const K& k) = 0;
 };
+
 
 template<typename F, typename S>
 struct pair {
@@ -19,7 +21,7 @@ struct pair {
   pair(F f, S s): first(f), second(s) {}
 };
 
-template<typename K, typename T, typename MapType, typename HashGen = hash<K>>
+template<typename Key, typename Value, typename MapType>
 struct HashMap {
 private:
   struct Node {
@@ -27,13 +29,13 @@ private:
       Node* clone() const;
 
     public:
-      pair<K, T> item;
+      pair<Key, Value> item;
       Node* next = nullptr;
 
       ~Node();
 
-      Node(K k, T t, Node* n): item(k, t), next(n) {}
-      Node(pair<K, T> p, Node* n): item(p), next(n) {}
+      Node(Key k, Value t, Node* n): item(k, t), next(n) {}
+      Node(pair<Key, Value> p, Node* n): item(p), next(n) {}
 
       Node(const Node&);
       Node(Node&&);
@@ -42,153 +44,142 @@ private:
       Node& operator=(Node&&);
   };
 
-  Node** buffer;
-  std::size_t buffer_size;
-  std::size_t length;
+  struct Buffer { 
+    Node** buffer;
+    std::size_t buffer_size;
+    std::size_t length;
 
-  void free_buffer();
-  static Node** clone_buffer(Node**, std::size_t, std::size_t);
+    Buffer();
+    ~Buffer();
+
+    Buffer(const Buffer&);
+    Buffer(Buffer&&);
+
+    Buffer& operator=(const Buffer&);
+    Buffer& operator=(Buffer&&);
+
+    Node* operator[](const std::size_t&);
+
+    void free();
+    Node** clone_buffer() const;
+
+    Node** begin();
+    Node** begin() const;
+    Node** end();
+    Node** end() const;
+  } buffer;
 
 public:
-  ~HashMap();
-
   HashMap();
-  HashMap(const HashMap&);
-  HashMap(HashMap&&);
 
-  HashMap& operator=(const HashMap&);
-  HashMap& operator=(HashMap&&);
+  Value& operator[](const Key&);
 
-  T& operator[](const K&);
-
-  void insert(K, T);
-  void remove(K);
+  void insert(const Key&, Value);
+  void remove(const Key&);
 
   std::size_t len() const;
   std::size_t size() const;
 
-  pair<K, T>* begin();
-  pair<K, T>* begin() const;
+  pair<Key, Value>* begin();
+  pair<Key, Value>* begin() const;
 
-  pair<K, T>* end();
-  pair<K, T>* end() const;
+  pair<Key, Value>* end();
+  pair<Key, Value>* end() const;
 
 };
 
 
-template<typename K, typename T, typename MapType, typename HashGen>
-HashMap<K, T, MapType, HashGen>::Node::~Node() {
+
+
+
+
+template<typename Key, typename Value, typename MapType>
+HashMap<Key, Value, MapType>::Node::~Node() {
   delete next; //this, now this is some smart behavior right here: delete calls the destructor of the object to delete so it will recursively call the destructor on the whole list; we dont even need to check if the pointer is null because the delete operator does this check anyway
 }
 
-template<typename K, typename T, typename MapType, typename HashGen>
-HashMap<K, T, MapType, HashGen>::Node::Node(const Node& other):
+template<typename K, typename T, typename MapType>
+HashMap<K, T, MapType>::Node::Node(const Node& other):
   item(other.item), next(other.clone()) {}
 
-template<typename K, typename T, typename MapType, typename HashGen>
-HashMap<K, T, MapType, HashGen>::Node::Node(Node&& other):
+template<typename K, typename T, typename MapType>
+HashMap<K, T, MapType>::Node::Node(Node&& other):
   item(other.item), next(other.next) {
     other.next = nullptr;
   }
 
-template<typename K, typename T, typename MapType, typename HashGen>
-typename HashMap<K, T, MapType, HashGen>::Node& HashMap<K, T, MapType, HashGen>::Node::operator=(const Node& other) {
+template<typename K, typename T, typename MapType>
+typename HashMap<K, T, MapType>::Node& HashMap<K, T, MapType>::Node::operator=(const Node& other) {
   item = other.item;
   delete next;
   next = other.clone();
 }
 
-template<typename K, typename T, typename MapType, typename HashGen>
-typename HashMap<K, T, MapType, HashGen>::Node& HashMap<K, T, MapType, HashGen>::Node::operator=(Node&& other) {
+template<typename K, typename T, typename MapType>
+typename HashMap<K, T, MapType>::Node& HashMap<K, T, MapType>::Node::operator=(Node&& other) {
   item = other.item;
   delete next;
   next = other.next;
   other.next = nullptr;
 }
 
-template<typename K, typename T, typename MapType, typename HashGen>
-typename HashMap<K, T, MapType, HashGen>::Node* HashMap<K, T, MapType, HashGen>::Node::clone() const {
+template<typename K, typename T, typename MapType>
+typename HashMap<K, T, MapType>::Node* HashMap<K, T, MapType>::Node::clone() const {
   if(next)
     return new Node(*next);
   return nullptr;
 }
 
-template<typename K, typename T, typename MapType, typename HashGen>
-HashMap<K, T, MapType, HashGen>::~HashMap() {
-  free_buffer();
+
+
+
+
+
+
+
+
+
+template<typename K, typename T, typename MapType>
+HashMap<K, T, MapType>::HashMap() {
 }
 
-template<typename K, typename T, typename MapType, typename HashGen>
-HashMap<K, T, MapType, HashGen>::HashMap(): buffer(nullptr), buffer_size(0), length(0) {}
 
-template<typename K, typename T, typename MapType, typename HashGen>
-HashMap<K, T, MapType, HashGen>::HashMap(const HashMap& other): buffer_size(other.buffer_size), length(other.length) {
-  buffer = clone_buffer(other.buffer, length, buffer_size);
+template<typename K, typename T, typename MapType>
+void HashMap<K, T, MapType>::insert(const K& key, T value) {
+  MapType::insert(key, value, buffer);
 }
 
-template<typename K, typename T, typename MapType, typename HashGen>
-HashMap<K, T, MapType, HashGen>::HashMap(HashMap&& other): buffer(other.buffer), buffer_size(other.buffer_size), length(other.length) {
-  other.buffer = nullptr;
+template<typename K, typename T, typename MapType>
+void HashMap<K, T, MapType>::remove(const K& key) {
+  MapType::remove(key, buffer);
 }
 
-template<typename K, typename T, typename MapType, typename HashGen>
-HashMap<K, T, MapType, HashGen>& HashMap<K, T, MapType, HashGen>::operator=(const HashMap& other) {
-  buffer_size = other.buffer_size;
-  length = other.length;
-  free_buffer();
-  buffer = clone_buffer(other.buffer, length, buffer_size);
-} 
-
-template<typename K, typename T, typename MapType, typename HashGen>
-HashMap<K, T, MapType, HashGen>& HashMap<K, T, MapType, HashGen>::operator=(HashMap&& other) {
-  buffer_size = other.buffer_size;
-  length = other.length;
-  free_buffer();
-  buffer = other.buffer;
-  other.buffer = nullptr;
+template<typename K, typename T, typename MapType>
+T& HashMap<K, T, MapType>::operator[](const K& key) {
+  return MapType::find(key, buffer);
 }
 
-template<typename K, typename T, typename MapType, typename HashGen>
-void HashMap<K, T, MapType, HashGen>::free_buffer() {
-  if(!buffer)
-    return;
+template<typename K, typename T, typename MapType>
+std::size_t HashMap<K, T, MapType>::len() const { return buffer.length; }
 
-  for(Node* n = &buffer[0]; n != buffer[length]; n++) {
-    delete n;
-  }
-  delete [] buffer;
-}
-
-template<typename K, typename T, typename MapType, typename HashGen>
-typename HashMap<K, T, MapType, HashGen>::Node** HashMap<K, T, MapType, HashGen>::clone_buffer(Node** other, std::size_t len, std::size_t size) {
-  Node** buffer = new Node*[size];
-  for(int i = 0; i < len; i++) {
-    buffer[i] = new Node(*other[i]);
-  }
-  return buffer;
-}
-
-template<typename K, typename T, typename MapType, typename HashGen>
-std::size_t HashMap<K, T, MapType, HashGen>::len() const { return length; }
-
-template<typename K, typename T, typename MapType, typename HashGen>
-std::size_t HashMap<K, T, MapType, HashGen>::size() const { return buffer_size; }
+template<typename K, typename T, typename MapType>
+std::size_t HashMap<K, T, MapType>::size() const { return buffer.buffer_size; }
 
 
-template<typename K, typename T, typename MapType, typename HashGen>
-pair<K ,T>* HashMap<K, T, MapType, HashGen>::begin() { return buffer[0]; }
+template<typename K, typename T, typename MapType>
+pair<K ,T>* HashMap<K, T, MapType>::begin() { return buffer.begin(); }
 
 
-template<typename K, typename T, typename MapType, typename HashGen>
-pair<K ,T>* HashMap<K, T, MapType, HashGen>::begin() const { return buffer[0]; }
+template<typename K, typename T, typename MapType>
+pair<K ,T>* HashMap<K, T, MapType>::begin() const { return buffer.begin(); }
 
 
-template<typename K, typename T, typename MapType, typename HashGen>
-pair<K ,T>* HashMap<K, T, MapType, HashGen>::end() { return buffer[length]; }
+template<typename K, typename T, typename MapType>
+pair<K ,T>* HashMap<K, T, MapType>::end() { return buffer.end(); }
 
 
-template<typename K, typename T, typename MapType, typename HashGen>
-pair<K ,T>* HashMap<K, T, MapType, HashGen>::end() const { return buffer[length]; }
+template<typename K, typename T, typename MapType>
+pair<K ,T>* HashMap<K, T, MapType>::end() const { return buffer.end(); }
 
 }
 
