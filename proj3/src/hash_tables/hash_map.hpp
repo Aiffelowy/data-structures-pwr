@@ -93,6 +93,93 @@ public:
 
 
 
+template<typename K, typename T, typename MapType>
+HashMap<K, T, MapType>::Buffer::Buffer():
+  buffer(nullptr), buffer_size(0), length(0) {}
+
+template<typename K, typename T, typename MapType>
+HashMap<K, T, MapType>::Buffer::~Buffer() {
+  this->free();
+}
+
+template<typename K, typename T, typename MapType>
+HashMap<K, T, MapType>::Buffer::Buffer(const Buffer& other):
+  buffer_size(other.buffer_size), length(other.length) {
+    buffer = other.clone_buffer();
+}
+
+template<typename K, typename T, typename MapType>
+HashMap<K, T, MapType>::Buffer::Buffer(Buffer&& other):
+ buffer(other.buffer), buffer_size(other.buffer_size), length(other.length) {
+   other.buffer = nullptr;
+}
+
+template<typename K, typename T, typename MapType>
+HashMap<K, T, MapType>::Buffer& HashMap<K, T, MapType>::Buffer::operator=(const Buffer& other) {
+  this->free();
+  buffer = other.clone_buffer();
+  buffer_size = other.buffer_size;
+  length = other.length;
+}
+
+template<typename K, typename T, typename MapType>
+HashMap<K, T, MapType>::Buffer& HashMap<K, T, MapType>::Buffer::operator=(Buffer&& other) {
+  this->free();
+  buffer = other.buffer;
+  length = other.length;
+  buffer_size = other.buffer_size;
+  other.buffer = nullptr;
+}
+
+template<typename K, typename T, typename MapType>
+HashMap<K, T, MapType>::Node* HashMap<K, T, MapType>::Buffer::operator[](const std::size_t& i) {
+  return buffer[i];
+}
+
+template<typename K, typename T, typename MapType>
+void HashMap<K, T, MapType>::Buffer::free() {
+  if(!buffer)
+    return;
+
+  for(Node* n = &buffer[0]; n != &buffer[length]; n++) {
+    delete n;
+  }
+  delete [] buffer;
+}
+
+template<typename K, typename T, typename MapType>
+HashMap<K, T, MapType>::Node** HashMap<K, T, MapType>::Buffer::clone_buffer() const {
+  Node** new_buffer = new Node*[buffer_size];
+  std::copy(&buffer[0], &buffer[buffer_size], &new_buffer[0]);
+  return new_buffer;
+}
+
+template<typename K, typename T, typename MapType>
+HashMap<K, T, MapType>::Node** HashMap<K, T, MapType>::Buffer::begin() {
+  return &buffer[0];
+}
+
+template<typename K, typename T, typename MapType>
+HashMap<K, T, MapType>::Node** HashMap<K, T, MapType>::Buffer::begin() const {
+  return &buffer[0];
+}
+
+template<typename K, typename T, typename MapType>
+HashMap<K, T, MapType>::Node** HashMap<K, T, MapType>::Buffer::end() {
+  return &buffer[length];
+}
+
+template<typename K, typename T, typename MapType>
+HashMap<K, T, MapType>::Node** HashMap<K, T, MapType>::Buffer::end() const {
+  return &buffer[length];
+}
+
+
+
+
+
+
+
 template<typename Key, typename Value, typename MapType>
 HashMap<Key, Value, MapType>::Node::~Node() {
   delete next; //this, now this is some smart behavior right here: delete calls the destructor of the object to delete so it will recursively call the destructor on the whole list; we dont even need to check if the pointer is null because the delete operator does this check anyway
