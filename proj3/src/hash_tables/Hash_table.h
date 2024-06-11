@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+namespace Hash2 {
+
 // Node class
 template <class T>
 class Node {
@@ -112,6 +114,8 @@ void HashTable<T>::display() {
         }
         std::cout << std::endl;
     }
+}
+
 }
 
 #endif
