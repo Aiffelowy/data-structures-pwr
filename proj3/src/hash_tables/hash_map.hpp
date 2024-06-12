@@ -2,6 +2,7 @@
 #define HASH_TABLE_HPP
 
 #include <cstddef>
+#include <iostream>
 #include <string>
 #include <concepts>
 
@@ -16,6 +17,7 @@ struct pair {
   F first;
   S second;
 
+  pair(F t): first(t) {}
   pair(F f, S s): first(f), second(s) {}
 };
 
@@ -24,7 +26,7 @@ struct Cuckoo;
 
 template<typename Key, typename Value, typename MapType = Cuckoo<Key, Value>>
 struct HashMap {
-private:
+public:
   struct Node {
     private:
       Node* clone() const;
@@ -35,7 +37,10 @@ private:
 
       ~Node();
 
-      Node(Key k, Value t, Node* n): item(k, t), next(n) {}
+      Node(const Key& k): item(k) {}
+      Node(const Key& k, Value t): item(k ,t), next(nullptr) {}
+      Node(pair<Key, Value> p): item(p), next(nullptr) {}
+      Node(const Key& k, Value t, Node* n): item(k, t), next(n) {}
       Node(pair<Key, Value> p, Node* n): item(p), next(n) {}
 
       Node(const Node&);
@@ -45,7 +50,6 @@ private:
       Node& operator=(Node&&);
   };
 
-public:
   struct Buffer { 
     Node** buffer;
     std::size_t buffer_size;
@@ -61,16 +65,17 @@ public:
     Buffer& operator=(const Buffer&);
     Buffer& operator=(Buffer&&);
 
-    Node* operator[](const std::size_t&);
+    Node*& operator[](const std::size_t&);
 
     void free();
     void resize_buffer(const std::size_t&);
     Node** clone_buffer() const;
 
-    void push(Node*);
     void remove(const std::size_t&);
-    Value pop();
+    void emplace(const std::size_t&, Node*);
 
+    std::size_t size() const;
+    std::size_t len() const;
     Node** begin();
     Node** begin() const;
     Node** end();
@@ -84,6 +89,7 @@ public:
 
   void insert(const Key&, Value);
   void remove(const Key&);
+  Value* find(const Key&);
 
   std::size_t len() const;
   std::size_t size() const;
@@ -101,15 +107,15 @@ public:
 
 
 template<typename HashGen, typename Key>
-concept has_hash = requires(const Key& key, const int& buffer_size) {
-  { HashGen::hash(key, buffer_size) } -> std::convertible_to<std::size_t>;
+concept has_hash = requires(const Key& key, const int& buffer_size, const int& var) {
+  { HashGen::hash(key, buffer_size, var) } -> std::convertible_to<std::size_t>;
 };
 
 template<typename MapType, typename Key, typename Value>
-concept is_valid_map_t = requires(const Key& key, Value value, HashMap<Key, Value, MapType>::Buffer& buffer) {
-  { MapType::insert(key, value, buffer) } -> std::convertible_to<void>;
-  { MapType::remove(key, buffer) } -> std::convertible_to<void>;
-  { MapType::find(key, buffer) } -> std::convertible_to<Value&>;
+concept is_valid_map_t = requires(HashMap<Key, Value, MapType>::Node* node, HashMap<Key, Value, MapType>::Buffer& buffer, const Key& key) {
+  { MapType::insert(node, buffer) } -> std::convertible_to<void>;
+  { MapType::find(key, buffer) } -> std::convertible_to<pair<typename HashMap<Key, Value, MapType>::Node**, std::size_t>>;
+  { MapType::rehash(buffer) } -> std::convertible_to<void>;
 };
 
 
@@ -120,8 +126,8 @@ struct HashGenerator{
 
 template<>
 struct HashGenerator<int> {
-  static std::size_t hash(const int& key, const int& buffer_size) {
-    int hash = 42069;
+  static std::size_t hash(const int& key, const int& buffer_size, const int& hash_seed) {
+    int hash = hash_seed;
     std::string key_str = std::to_string(key);
     for(const char& c : key_str) {
       hash = ((hash << 5) + hash) + c;
@@ -134,8 +140,8 @@ struct HashGenerator<int> {
 
 template<>
 struct HashGenerator<std::string> {
-  static std::size_t hash(const std::string& key, const int& bs) {
-    int hash = 42069;
+  static std::size_t hash(const std::string& key, const int& bs, const int& hash_seed) {
+    int hash = hash_seed;
     for(const char& c : key) {
       hash = ((hash << 5) + hash) + c;
     }
@@ -145,16 +151,110 @@ struct HashGenerator<std::string> {
   }
 };
 
+template<>
+struct HashGenerator<long> {
+  static pair<std::size_t, std::size_t> hash(const long& key, const int& buffer_size, const int& hash_seed) {
+    int hash = 5381;
+    std::string key_str = std::to_string(key);
+    for(const char& c : key_str) {
+      hash = ((hash << 5) + hash) + c;
+    }
+    if(buffer_size == 0)
+      return hash % 1;
+    return hash % buffer_size;
+  }
+
+};
+
 
 template<typename K, typename T, typename HashGen>
 struct Cuckoo {
   using Buffer = HashMap<K, T, Cuckoo>::Buffer;
-  static void insert(const K& key, T item, Buffer& buffer) {}
-  static void remove(const K&, Buffer&) {}
-  static T& find(const K&, Buffer&) {}
+  using Node = HashMap<K, T, Cuckoo>::Node;
+
+  static const int TRIES = 20;
+
+  static std::size_t hash(const K& key, const std::size_t& buffer_size, const bool& type) {
+    std::size_t buff_half_size = buffer_size/2;
+    if(buff_half_size == 0)
+      buff_half_size = 1;
+    if(type)
+      return (HashGen::hash(key, buffer_size, 0) % buff_half_size);
+    else
+      return (HashGen::hash(key, buffer_size, 0) % buff_half_size) + buff_half_size;
+
+  }
+
+  static Node* put_in_buffer(Node* node, Buffer& buff, const std::size_t& index) {
+    if(buff[index] == nullptr) {
+      buff.emplace(index, node);
+      return nullptr;
+    } else if(buff[index]->item.first == node->item.first) {
+      buff[index]->item.second = node->item.second;
+      return nullptr;
+    }
+
+    Node* t = buff[index];
+    buff[index] = node;
+    return t;
+  }
+
+  static void cuc_insert(Node* node, Buffer& buff, int depth) {
+    if(depth == 0) {
+      buff.resize_buffer(buff.size()*2);
+      rehash(buff);
+    }
+    if(buff.len() > buff.size()*0.3 || buff.size() == 0) {
+      if(buff.size() == 0) {
+        buff.resize_buffer(2);
+        rehash(buff);
+      }
+      else {
+        buff.resize_buffer(buff.size()*2);
+        rehash(buff);
+      }
+    }
+
+    std::size_t hash_result = hash(node->item.first, buff.size(), depth % 2);
+        
+    Node* pushed_out = put_in_buffer(node, buff, hash_result);
+    if(!pushed_out)
+      return;
+    
+    cuc_insert(node, buff, depth-1);
+  }
+
+  static void insert(Node* node, Buffer& buffer) {
+    cuc_insert(node, buffer, TRIES);
+  }
+
+  static void rehash(Buffer& buffer) {
+    const Buffer temp(buffer);
+    buffer.free();
+    buffer.resize_buffer(temp.size());
+    for(Node* n : temp) {
+      if(n != nullptr) {
+        cuc_insert(new Node(n->item.first, n->item.second), buffer, TRIES);
+      }
+    }
+  }
+
+  static pair<Node**, std::size_t> find(const K& key, Buffer& buffer) {
+    Node** ret = new Node*[2]();
+    std::size_t size = 0;
+    Node* n1 = buffer[hash(key, buffer.size(), false)];
+    Node* n2 = buffer[hash(key, buffer.size(), true)];
+    if(n1 != nullptr) {
+      size++;
+      ret[0] = n1;
+    }
+    if(n2 != nullptr) {
+      size++;
+      ret[1] = n2;
+    }
+    return pair(ret, size);
+  }
 };
-
-
 
 
 
@@ -165,7 +265,7 @@ HashMap<K, T, MapType>::Buffer::Buffer():
 
 template<typename K, typename T, typename MapType>
 HashMap<K, T, MapType>::Buffer::Buffer(std::size_t prealloc_size):
-  buffer(new Node*[prealloc_size]), buffer_size(prealloc_size), length(0) {}
+  buffer(new Node*[prealloc_size]()), buffer_size(prealloc_size), length(0) {}
 
 template<typename K, typename T, typename MapType>
 HashMap<K, T, MapType>::Buffer::~Buffer() {
@@ -174,9 +274,7 @@ HashMap<K, T, MapType>::Buffer::~Buffer() {
 
 template<typename K, typename T, typename MapType>
 HashMap<K, T, MapType>::Buffer::Buffer(const Buffer& other):
-  buffer_size(other.buffer_size), length(other.length) {
-    buffer = other.clone_buffer();
-}
+  buffer(other.clone_buffer()), buffer_size(other.buffer_size), length(other.length) {}
 
 template<typename K, typename T, typename MapType>
 HashMap<K, T, MapType>::Buffer::Buffer(Buffer&& other):
@@ -202,7 +300,7 @@ HashMap<K, T, MapType>::Buffer& HashMap<K, T, MapType>::Buffer::operator=(Buffer
 }
 
 template<typename K, typename T, typename MapType>
-HashMap<K, T, MapType>::Node* HashMap<K, T, MapType>::Buffer::operator[](const std::size_t& i) {
+HashMap<K, T, MapType>::Node*& HashMap<K, T, MapType>::Buffer::operator[](const std::size_t& i) {
   return buffer[i];
 }
 
@@ -211,62 +309,70 @@ void HashMap<K, T, MapType>::Buffer::free() {
   if(!buffer)
     return;
 
-  for(Node** n = &buffer[0]; n != &buffer[length]; n++) {
-    delete *n;
+  for(int i = 0; i < buffer_size; i++) {
+    delete buffer[i];
   }
+
   delete [] buffer;
   buffer = nullptr;
+  buffer_size = 0;
+  length = 0;
 }
 
 template<typename K, typename T, typename MapType>
 HashMap<K, T, MapType>::Node** HashMap<K, T, MapType>::Buffer::clone_buffer() const {
-  Node** new_buffer = new Node*[buffer_size];
-  for(std::size_t i = 0; i < length; i++)
-    new_buffer[i] = new Node(*buffer[i]);
+  Node** new_buffer = new Node*[buffer_size]();
+  for(std::size_t i = 0; i < buffer_size; i++)
+    if(buffer[i] != nullptr)
+      new_buffer[i] = new Node(*buffer[i]);
 
   return new_buffer;
 }
 
 template<typename K, typename T, typename MapType>
 void HashMap<K, T, MapType>::Buffer::resize_buffer(const std::size_t& new_size) {
-  Node** new_buffer = new Node*[new_size];
+  Node** new_buffer = new Node*[new_size]();
   if(new_size < length)
     length = new_size;
 
-  for(std::size_t i = 0; i < length; i++)
-    new_buffer[i] = new Node(*buffer[i]);
-
+  if(buffer_size != 0) {
+    int funny = 0;
+    for(std::size_t i = 0; i < buffer_size; i++) {
+      if(buffer[i] != nullptr) {
+        new_buffer[funny] = new Node(*buffer[i]);
+        funny++;
+      }
+    }
+  }
   this->free();
   buffer_size = new_size;
   buffer = new_buffer;
 }
 
 template<typename K, typename T, typename MapType>
-void HashMap<K, T, MapType>::Buffer::push(Node* new_node) {
-  if(length == buffer_size) {
-    if(buffer_size == 0)
-      this->resize_buffer(2);
-    else
-      this->resize_buffer(buffer_size*2);
+void HashMap<K, T, MapType>::Buffer::emplace(const std::size_t& index, Node* new_node) {
+  if(buffer[index] == nullptr) {
+    buffer[index] = new_node;
+    length++;
+  } else {
+    delete buffer[index];
+    buffer[index] = new_node;
   }
-
-  buffer[length] = new_node;
-  length++;
-}
-
-template<typename K, typename T, typename MapType>
-T HashMap<K, T, MapType>::Buffer::pop() {
-  length--;
-  return buffer[length];
 }
 
 template<typename K, typename T, typename MapType>
 void HashMap<K, T, MapType>::Buffer::remove(const std::size_t& position) {
   length--;
-  for(auto i = position; i < length; i++) {
-    buffer[i] = buffer[i+1];
-  }
+  delete buffer[position];
+  buffer[position] == nullptr;
 }
+
+
+template<typename K, typename T, typename MapType>
+std::size_t HashMap<K, T, MapType>::Buffer::size() const { return buffer_size; }
+
+template<typename K, typename T, typename MapType>
+std::size_t HashMap<K, T, MapType>::Buffer::len() const { return length; }
 
 template<typename K, typename T, typename MapType>
 HashMap<K, T, MapType>::Node** HashMap<K, T, MapType>::Buffer::begin() {
@@ -280,12 +386,12 @@ HashMap<K, T, MapType>::Node** HashMap<K, T, MapType>::Buffer::begin() const {
 
 template<typename K, typename T, typename MapType>
 HashMap<K, T, MapType>::Node** HashMap<K, T, MapType>::Buffer::end() {
-  return &buffer[length];
+  return &buffer[buffer_size];
 }
 
 template<typename K, typename T, typename MapType>
 HashMap<K, T, MapType>::Node** HashMap<K, T, MapType>::Buffer::end() const {
-  return &buffer[length];
+  return &buffer[buffer_size];
 }
 
 
@@ -296,7 +402,8 @@ HashMap<K, T, MapType>::Node** HashMap<K, T, MapType>::Buffer::end() const {
 
 template<typename Key, typename Value, typename MapType>
 HashMap<Key, Value, MapType>::Node::~Node() {
-  delete next; //this, now this is some smart behavior right here: delete calls the destructor of the object to delete so it will recursively call the destructor on the whole list; we dont even need to check if the pointer is null because the delete operator does this check anyway
+  if(next == nullptr)
+    delete next; //this, now this is some smart behavior right here: delete calls the destructor of the object to delete so it will recursively call the destructor on the whole list; we dont even need to check if the pointer is null because the delete operator does this check anyway
 }
 
 template<typename K, typename T, typename MapType>
@@ -342,27 +449,53 @@ typename HashMap<K, T, MapType>::Node* HashMap<K, T, MapType>::Node::clone() con
 
 template<typename K, typename T, typename MapType>
 HashMap<K, T, MapType>::HashMap() {
-  static_assert(is_valid_map_t<MapType, K, T>, "\nMapType has to implement:\n 'static void insert(const Key&, Value)'\n 'static void remove(const Key&)'\n 'static Value& find(const Key&)'");
+  static_assert(is_valid_map_t<MapType, K, T>, "\nMapType has to implement:\n 'static void insert(Node*, Buffer&)'\n 'static void rehash(Buffer&)'\n static pair<std::size_t*, std::size_t> hash(const K&)");
 }
 
 template<typename K, typename T, typename MapType>
 HashMap<K, T, MapType>::HashMap(std::size_t prealloc_size): buffer(prealloc_size) {
-  static_assert(is_valid_map_t<MapType, K, T>, "\nMapType has to implement:\n 'static void insert(const Key&, Value)'\n 'static void remove(const Key&)'\n 'static Value& find(const Key&)'");
+  static_assert(is_valid_map_t<MapType, K, T>, "\nMapType has to implement:\n 'static void insert(Node*, Buffer&)'\n 'static void rehash(Buffer&)'\n static pair<std::size_t*, std::size_t> hash(const K&)");
 }
 
 template<typename K, typename T, typename MapType>
 void HashMap<K, T, MapType>::insert(const K& key, T value) {
-  MapType::insert(key, value, buffer);
+  MapType::insert(new Node(key, value), buffer);
 }
 
 template<typename K, typename T, typename MapType>
 void HashMap<K, T, MapType>::remove(const K& key) {
-  MapType::remove(key, buffer);
+  buffer.remove(MapType::hash(key));
+}
+
+template<typename K, typename T, typename MapType>
+T* HashMap<K, T, MapType>::find(const K& key) {
+  pair<Node**, std::size_t> found = MapType::find(key, buffer);
+  if(found.second == 0)
+    return nullptr;
+
+  for(int i = 0; i < found.second; i++) {
+    Node* n = found.first[i];
+    if(n != nullptr && n->item.first == key) {
+      delete [] found.first;
+      return &n->item.second;
+    }
+  }
+  return nullptr;
 }
 
 template<typename K, typename T, typename MapType>
 T& HashMap<K, T, MapType>::operator[](const K& key) {
-  return MapType::find(key, buffer);
+  if(buffer.size() == 0)
+    buffer.resize_buffer(2);
+
+  T* n = find(key);
+  if(n != nullptr)
+    return *n;
+  else {
+    MapType::insert(new Node(key), buffer);
+    T* t = find(key);
+    return *t;
+  }
 }
 
 template<typename K, typename T, typename MapType>

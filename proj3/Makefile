@@ -1,5 +1,5 @@
 CC        = clang++
-CXXFLAGS  = -Os -pipe -march=native -Wall -std=c++20
+CXXFLAGS  = -g -pipe -march=native -Wall -std=c++20
 LDFLAGS   =
 RM        = rm -f
 
