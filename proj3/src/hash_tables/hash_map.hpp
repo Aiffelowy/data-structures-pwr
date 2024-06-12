@@ -230,7 +230,7 @@ struct Cuckoo {
 
   static void rehash(Buffer& buffer) {
     const Buffer temp(buffer);
-    buffer.free();
+    //buffer.free();
     buffer.resize_buffer(temp.size());
     for(Node* n : temp) {
       if(n != nullptr) {
@@ -269,7 +269,7 @@ HashMap<K, T, MapType>::Buffer::Buffer(std::size_t prealloc_size):
 
 template<typename K, typename T, typename MapType>
 HashMap<K, T, MapType>::Buffer::~Buffer() {
-  this->free();
+//  this->free();
 }
 
 template<typename K, typename T, typename MapType>
@@ -284,7 +284,7 @@ HashMap<K, T, MapType>::Buffer::Buffer(Buffer&& other):
 
 template<typename K, typename T, typename MapType>
 HashMap<K, T, MapType>::Buffer& HashMap<K, T, MapType>::Buffer::operator=(const Buffer& other) {
-  this->free();
+  //this->free();
   buffer = other.clone_buffer();
   buffer_size = other.buffer_size;
   length = other.length;
@@ -292,7 +292,7 @@ HashMap<K, T, MapType>::Buffer& HashMap<K, T, MapType>::Buffer::operator=(const 
 
 template<typename K, typename T, typename MapType>
 HashMap<K, T, MapType>::Buffer& HashMap<K, T, MapType>::Buffer::operator=(Buffer&& other) {
-  this->free();
+  //this->free();
   buffer = other.buffer;
   length = other.length;
   buffer_size = other.buffer_size;
@@ -344,7 +344,7 @@ void HashMap<K, T, MapType>::Buffer::resize_buffer(const std::size_t& new_size) 
       }
     }
   }
-  this->free();
+  //this->free();
   buffer_size = new_size;
   buffer = new_buffer;
 }
@@ -464,7 +464,17 @@ void HashMap<K, T, MapType>::insert(const K& key, T value) {
 
 template<typename K, typename T, typename MapType>
 void HashMap<K, T, MapType>::remove(const K& key) {
-  buffer.remove(MapType::hash(key));
+  pair<Node**, std::size_t> found = MapType::find(key, buffer);
+  if(found.second == 0)
+    return;
+
+  for(int i = 0; i < found.second; i++) {
+    Node* n = found.first[i];
+    if(n != nullptr && n->item.first == key) {
+      delete [] found.first;
+      delete n;
+    }
+  }
 }
 
 template<typename K, typename T, typename MapType>
