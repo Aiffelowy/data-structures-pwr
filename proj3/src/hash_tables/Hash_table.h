@@ -4,8 +4,6 @@
 #include <iostream>
 #include <string>
 
-namespace Hash2 {
-
 // Node class
 template <class T>
 class Node {
@@ -46,11 +44,12 @@ public:
     void display();
 };
 
+//basic constructor
 template <class T>
 HashTable<T>::HashTable(int size) : size(size) {
     table = new Node<T>*[size]();
 }
-
+//destructor, we need free memory
 template <class T>
 HashTable<T>::~HashTable() {
     for (int i = 0; i < size; ++i) {
@@ -63,21 +62,21 @@ HashTable<T>::~HashTable() {
     }
     delete[] table;
 }
-
-// DJB2 hashFunction
+//DJB2 hush function
 template <class T>
 int HashTable<T>::hashFunction(int key) {
-    int hash = 5381;
-    int c;
+    unsigned long hash = 5381;
+    int c = 33;
     std::string key_str = std::to_string(key);
     for (char c : key_str) {
-        hash = ((hash << 5) + hash) + c; // hash * 33 + c
+        hash = ((hash << 5) + hash) + c; 
     }
     return hash % size;
 }
 
+//insert method
 template <class T>
-void HashTable<T>::insert(int key, T value) {
+void HashTable<T>::insert(int key, T value) {   
     int index = hashFunction(key);
     Node<T>* newNode = new Node<T>(key, value);
     if (!table[index]) {
@@ -92,6 +91,7 @@ void HashTable<T>::insert(int key, T value) {
     }
 }
 
+//remove method
 template <class T>
 void HashTable<T>::remove(int key) {
     int index = hashFunction(key);
@@ -111,6 +111,7 @@ void HashTable<T>::remove(int key) {
     }
 }
 
+//display method, its important to see if it works
 template <class T>
 void HashTable<T>::display() {
     for (int i = 0; i < size; ++i) {
@@ -123,7 +124,6 @@ void HashTable<T>::display() {
         std::cout << std::endl;
     }
 }
-
-}
+//i assumed that code isnt much complicated and do not need many comments
 
 #endif
