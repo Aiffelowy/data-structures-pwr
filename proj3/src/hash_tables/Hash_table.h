@@ -22,10 +22,13 @@ template <class T>
 class HashTable {
 private:
     int size;
+    int numElements;
     Node<T>** table;
 
     // Hash function
     int hashFunction(int key);
+
+    void rehash();
 
 public:
     // Constructor
@@ -74,9 +77,33 @@ int HashTable<T>::hashFunction(int key) {
     return hash % size;
 }
 
+// Rehash function
+template <class T>
+void HashTable<T>::rehash() {
+    int oldSize = size;
+    size = size * 2;
+    Node<T>** oldTable = table;
+    table = new Node<T>*[size]();
+    numElements = 0;
+
+    for (int i = 0; i < oldSize; ++i) {
+        Node<T>* current = oldTable[i];
+        while (current) {
+            insert(current->key, current->value);
+            Node<T>* temp = current;
+            current = current->next;
+            delete temp;
+        }
+    }
+    delete[] oldTable;
+}
+
 //insert method
 template <class T>
-void HashTable<T>::insert(int key, T value) {   
+void HashTable<T>::insert(int key, T value) {
+    if (static_cast<float>(numElements) / size >= 0.5) {
+        rehash();
+    }
     int index = hashFunction(key);
     Node<T>* newNode = new Node<T>(key, value);
     if (!table[index]) {
@@ -89,6 +116,7 @@ void HashTable<T>::insert(int key, T value) {
         }
         current->next = newNode;
     }
+    numElements++;
 }
 
 //remove method
