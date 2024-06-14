@@ -69,7 +69,6 @@ HashTable<T>::~HashTable() {
 template <class T>
 int HashTable<T>::hashFunction(int key) {
     unsigned long hash = 5381;
-    int c = 33;
     std::string key_str = std::to_string(key);
     for (char c : key_str) {
         hash = ((hash << 5) + hash) + c; 
