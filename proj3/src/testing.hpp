@@ -1,8 +1,10 @@
 #include "misc.hpp"
+#include "panic.hpp"
 #include "rng.hpp"
 
 #include <chrono>
 #include <cstdint>
+#include <map>
 #include <ostream>
 #include <string>
 #include <fstream>
@@ -43,9 +45,12 @@ struct TestResult {
 
 struct Test {
   std::string label;
+  std::string line_color;
   std::function<TestResult(const RNG&)> test;
 
   Test(std::string label, std::function<TestResult(const RNG&)> fn) : label(label), test(fn) {}
+
+  Test(std::string label, std::string line_color, std::function<TestResult(const RNG&)> fn) : label(label), line_color(line_color), test(fn) {}
 };
 
 
@@ -88,6 +93,47 @@ public:
 
 };
 
+struct LatexPlot {
+  std::vector<std::pair<std::string, std::string>> settings = 
+  {
+    {"scale", "1.0"},
+    {"title", "{Title}"},
+    {"xlabel", "{X Label}"},
+    {"ylabel", "{Y Label}"},
+    {"xmin", "0"},
+    {"xmax", "1000000"},
+    {"ymin", "0"},
+    {"ymax", "2000"},
+    {"mark", "ball"},
+    {"ymode", "normal"},
+    {"legend pos", "north west"},
+    {"legend style", "{font=\\tiny}"},
+    {"ymajorgrids", "true"},
+    {"grid style", "dashed"}
+  };
+
+  LatexPlot& set_setting(std::string setting, std::string value) {
+    for(auto& s : settings) {
+      if(s.first == setting) {
+        s.second = value;
+        return *this;
+      }
+    }
+
+    settings.push_back({setting, value});
+    return *this;
+  }
+
+  std::string get_setting(std::string setting) {
+    for(const auto& s : settings) {
+      if(s.first == setting) {
+        return s.second;
+      }
+    }
+    return "";
+  }
+
+};
 
 template<typename TimeUnit = std::chrono::nanoseconds>
 class TestSuite {
@@ -98,6 +144,9 @@ private:
   std::vector<Test> test_types;
   std::vector<int> data_sizes;
   std::vector<TestRunner<TimeUnit>> tests;
+
+  bool has_plot = false;
+  LatexPlot plot;
 
 public:
   TestSuite() {}
@@ -114,17 +163,31 @@ public:
     return *this;
   }
 
-  TestSuite& add_test(Test test) {
-    test_types.push_back(test);
+  TestSuite& add_test(std::string name, std::function<TestResult(const RNG&)> function) {
+    std::string color = "";
+    test_types.push_back(Test(name, color, function));
     return *this;
   }
 
-  TestSuite& add_data_size(int size) {
-    data_sizes.push_back(size);
+  TestSuite& add_test(std::string name, std::string color,  std::function<TestResult(const RNG&)> function) {
+    test_types.push_back(Test(name, color, function));
     return *this;
   }
 
-  Result::Result<Result::Nothing, Errors::IOError> to_csv(std::string path) {
+  template<typename ... Sizes>  requires((... && std::is_convertible_v<Sizes, int>))
+  TestSuite& add_data_sizes(Sizes... sizes) {
+    data_sizes = { std::move(sizes) ... };
+    return *this;
+  }
+
+  TestSuite& set_latex_plot(LatexPlot plot) {
+    has_plot = true;
+    this->plot = plot;
+
+    return *this;
+  }
+
+  Result::Result<TestSuite&, Errors::IOError> to_csv(std::string path) {
     std::ofstream file(path);
     
     if(file.fail())
@@ -138,7 +201,7 @@ public:
     }
     file << '\n';
 
-    int difference = data_sizes.size() - test_types.size();
+    const int difference = data_sizes.size() - test_types.size();
     for(int data_sizes_i = 0; data_sizes_i < data_sizes.size(); data_sizes_i++) {
       file << data_sizes[data_sizes_i] << ',';
       for(int tests_i = 0; tests_i < test_types.size(); tests_i++) {
@@ -150,11 +213,51 @@ public:
       file << '\n';
     }
 
-    return Result::Ok();
+    return Result::Ok(this);
   }
 
+  Result::Result<TestSuite&, Errors::IOError> to_latex(std::string path) {
+  if(!has_plot)
+    return Result::Ok(this);
 
-  void test_full() {
+  std::ofstream file(path);
+  if(file.fail())
+    return Result::Err(Errors::IOError::CoulntOpenFile);
+
+
+  file << format_string("\\begin{tikzpicture}[scale={}]\n\\begin{axis}[\n", plot.get_setting("scale"));
+  
+  int last_setting = plot.settings.size();
+  int i = 0;
+  for(const auto& setting : plot.settings) {
+    i++;
+    if(i == 1)
+      continue;
+    file << setting.first << "=" << setting.second << (i != last_setting ? "," : "") << "\n";
+  }
+  file << "]\n";
+
+  const int difference = data_sizes.size() - test_types.size();
+  for(int test_type_i = 0; test_type_i < test_types.size(); test_type_i++) {
+    file << format_string("\\addplot[color={}]\ncoordinates {\n", test_types[test_type_i].line_color);
+
+    for(int data_size_i = 0; data_size_i < data_sizes.size(); data_size_i++) {
+      int index = (data_sizes.size()-difference)*data_size_i + test_type_i;
+      file << format_string("({},{})\n", data_sizes[data_size_i], tests[index]);
+    }
+    file << "};\n\n";
+  }
+
+  file << "\\legend{";
+  for(int i = 0; i < test_types.size(); i ++) {
+    file << test_types[i].label << (i == test_types.size()-1 ? "" : ",");
+  }
+  file << "}\n\\end{axis}\n\\end{tikzpicture}";
+
+  return Result::Ok(this);
+}
+
+  TestSuite& test_full() {
     for(const auto& data_size : data_sizes) {
       for(const auto& test_t : test_types) {
         TestRunner<> test(samples_per_test, number_of_tests, data_size);
@@ -162,6 +265,7 @@ public:
         tests.push_back(test);
       }
     }
+    return *this;
   }
 };
 
