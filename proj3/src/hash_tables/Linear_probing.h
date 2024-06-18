@@ -82,10 +82,29 @@ public:
 	}
 
 	//remove method
-	void remove(int key) {}
+	void remove(int key) {
+		int hash = hashFunction(key);
+		while (table[hash].key != -1) {
+			if (table[hash].key == key && !table[hash].isDeleted) {
+				table[hash].isDeleted = true;
+				count--;
+				return;
+			}
+			hash = (hash + 1) % size;
+		}
+	}
 
 	//display method
-	void display() {}
+	void display() {
+		for (int i = 0; i < size; i++) {
+			if (table[i].key != -1 && !table[i].isDeleted) {
+				std::cout << i << " --> Key: " << table[i].key << ", Value: " << table[i].value << std::endl;
+			}
+			else {
+				std::cout << i << " --> " << std::endl;
+			}
+		}
+	}
 };
 
 #endif
