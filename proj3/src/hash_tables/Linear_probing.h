@@ -1,5 +1,5 @@
-#ifndef Linear.h
-#define Linear.h
+#ifndef LINEAR_H
+#define LINEAR_H
 
 #include <iostream>
 
@@ -17,8 +17,8 @@ public:
 
 //hash table class, basic name 
 class HashTable {
-private:
-	int *table;
+public:
+	KeyValue *table;
 	int size;
 	int count;
 
@@ -28,20 +28,61 @@ private:
 	}
 
 	//rehash method
-	void rehash() {}
+	void rehash() {
+		int oldSize = size;
+		size *= 2;
+		KeyValue* oldTable = table;
+		table = new KeyValue[size];
 
-public:
+		count = 0;
+		for (int i = 0; i < size; i++) {
+			table[i] = KeyValue();
+		}
+
+		for (int i = 0; i < oldSize; i++) {
+			if (oldTable[i].key != -1 && !oldTable[i].isDeleted) {
+				insert(oldTable[i].key, oldTable[i].value);
+			}
+		}
+
+		delete[] oldTable;
+	}
+
 	//constructor
-	HashTable(int iSize) {}
+	HashTable(int iSize) {
+		size = iSize;
+		table = new KeyValue[size];
+		count = 0;
+	}
 
 	//destructor
-	~HashTable() {}
+	~HashTable() {
+		delete[] table;
+	}
 
 	//inrest method
-	void insert(int key, int value) {}
+	void insert(int key, int value) {
+		if (count >= size / 2) {
+			rehash();
+		}
+
+		int hash = hashFunction(key);
+		while (table[hash].key != -1 && !table[hash].isDeleted) {
+			if (table[hash].key == key) {
+				table[hash].value = value;
+				return;
+			}
+			hash = (hash + 1) % size;
+		}
+
+		table[hash].key = key;
+		table[hash].value = value;
+		table[hash].isDeleted = false;
+		count++;
+	}
 
 	//remove method
-	void remove(int key) {} 
+	void remove(int key) {}
 
 	//display method
 	void display() {}
